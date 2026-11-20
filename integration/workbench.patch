@@ -133,7 +133,7 @@ index 390acb6..5e89f19 100644
 -          <label class="method-label">处理方式
 -            <select id="repair-method">
 -              <option value="auto" selected>自动识别 · 一键修复（先判类型，再按类型补）</option>
-+          <div class="method-label">选择怎么补
++          <div class="method-label">选择修复方式
 +            <select id="repair-method" hidden aria-label="处理方式">
 +              <option value="auto" selected>自动处理 · 传统算法</option>
                <option value="peel">大裂隙 · 先铺底层再续纹样（剥落专用）</option>
