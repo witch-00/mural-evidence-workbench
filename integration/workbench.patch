@@ -1,28 +1,45 @@
 diff --git a/app.py b/app.py
-index b7f2385..fa4ff86 100644
+index b7f2385..70a4da2 100644
 --- a/app.py
 +++ b/app.py
-@@ -939,2 +939,18 @@ def validate_document(d, kind):
+@@ -40,2 +40,3 @@ from repair import (CLOUD_METHODS, DEFAULT_METHOD, METHOD_NAMES, MODEL_FREE_METH
+ import wanx_edit
++import observation_card
+
+@@ -886,3 +887,3 @@ def checked_text(value, limit, label, required=False):
+
+-ORIGINS = {'human': '人工填写', 'ai': 'AI 初稿', 'edited': '人工修订 AI', 'legacy': '旧版来源待核'}
++ORIGINS = {'human': '人工填写', 'ai': 'AI 初稿', 'edited': '人工修订 AI', 'legacy': '历史记录'}
+
+@@ -933,3 +934,3 @@ def validate_document(d, kind):
+     model = checked_text(d.get('model_label'), 160, '模型名称') or '无工作台模型调用记录'
+-    legacy_origin = '人工填写' if model.startswith(('未调用', '无工作台')) else '旧版来源待核'
++    legacy_origin = '人工填写' if model.startswith(('未调用', '无工作台')) else '历史记录'
+     doc = {'image': image, 'source': checked_text(d.get('source'), 260, '图片来源及授权', True),
+@@ -939,2 +940,4 @@ def validate_document(d, kind):
      if kind == 'observation':
 +        if 'evidence_version' in d:
-+            if type(d['evidence_version']) is not int or d['evidence_version'] != 1:
-+                raise UserError('无法识别该区域证据卡的格式。')
-+            for region, row in zip(doc['regions'], d['regions']):
-+                rid = region['id']
-+                e = row.get('evidence')
-+                if not isinstance(e, dict) or e.get('decision') not in ('保留观察', '修正观察', '暂缓判断'):
-+                    raise UserError(f'请打开 {rid}，选择这条描述是否准确：描述准确、我改过描述，或暂时拿不准。')
-+                fields = [('reference', '依据', 80, True), ('alternative', '另一种解释', 60, False),
-+                          ('reason', '复核理由', 80, True), ('follow_up', '还需核实', 60, e['decision'] == '暂缓判断')]
-+                region['evidence'] = {'decision': e['decision']}
-+                for key, label, limit, required in fields:
-+                    if not isinstance(e.get(key, ''), str):
-+                        raise UserError(f'{rid} 的{label}格式无效。')
-+                    region['evidence'][key] = checked_text(e.get(key), limit, f'{rid} 的{label}', required)
-+                region['ai_observation'] = checked_text(row.get('ai_observation'), 100, f'{rid} 的 AI 初稿')
++            observation_card.validate_evidence(doc, d['regions'], d['evidence_version'], checked_text, UserError)
          doc['advice'] = reviewed_advice(d.get('recommendations'), doc['regions'], legacy_origin)
-@@ -1059,10 +1075,33 @@ def observation_page(c, doc):
-     image, regions = doc['image'], doc['regions']
+@@ -1042,34 +1045,2 @@ def crop_strip(c, panels, label_y, bottom):
+
+-def participation_summary(doc):
+-    """One line stating which items are AI-written and which a human wrote.
+-
+-    The rubric scores "AI 能力边界准确" and "关键步骤可相互核验", so the card states
+-    the split explicitly instead of leaving the reader to infer it from tags.
+-    """
+-    tally = {}
+-    for item in list(doc['regions']) + list(doc['advice']):
+-        tally[item['origin']] = tally.get(item['origin'], 0) + 1
+-    tally[doc['uncertainty_origin']] = tally.get(doc['uncertainty_origin'], 0) + 1
+-    order = ['ai', 'edited', 'human', 'legacy']
+-    parts = [f'{ORIGINS.get(key, key)} {tally[key]} 项' for key in order if key in tally]
+-    return 'AI 与人工分工：' + '、'.join(parts) + '；每项的来源见各区块标签。'
+-
+-
+-def observation_page(c, doc):
+-    image, regions = doc['image'], doc['regions']
 -    caption(c, '原图与区域编号', 32, 747)
 -    bounds = place_image(c, image, 32, 523, 257, 212)
 -    mark_regions(c, bounds, regions)
@@ -31,40 +48,42 @@ index b7f2385..fa4ff86 100644
 -        block(c, f"{r['id']}  ·  {r['origin']}", r['observation'],
 -              304, 731-i*row_height, 259, row_height)
 -    crop_strip(c, [(r['id']+' 原图局部', region_crop(image, r)) for r in regions], 502, 397)
-+    if 'evidence' in regions[0]:
-+        caption(c, '原图与区域编号', 32, 747)
-+        bounds = place_image(c, image, 32, 610, 210, 127)
-+        mark_regions(c, bounds, regions)
-+        width = (310 - 8*(len(regions)-1)) / len(regions)
-+        for i, r in enumerate(regions):
-+            x = 252 + i*(width+8)
-+            caption(c, r['id']+' 原图局部', x, 747)
-+            place_image(c, region_crop(image,r), x, 610, width, 127)
-+        row_height = 217 / len(regions)
-+        for i, r in enumerate(regions):
-+            e = r['evidence']
-+            lines = ['可见现象　'+r['observation']]
-+            if r['ai_observation']:
-+                lines.append('AI 初稿　'+r['ai_observation'])
-+            if e['alternative']:
-+                lines.append('另一种解释　'+e['alternative'])
-+            lines.extend(['依据　'+e['reference'], '理由　'+e['reason']])
-+            if e['follow_up']:
-+                lines.append('还需核实　'+e['follow_up'])
-+            block(c, f"{r['id']} · {r['origin']} ／ 人工决定：{e['decision']}",
-+                  '\n'.join(lines), 32, 595-i*row_height, 530, row_height)
-+    else:
-+        caption(c, '原图与区域编号', 32, 747)
-+        bounds = place_image(c, image, 32, 523, 257, 212)
-+        mark_regions(c, bounds, regions)
-+        row_height = 212 / len(regions)
-+        for i, r in enumerate(regions):
-+            block(c, f"{r['id']}  ·  {r['origin']}", r['observation'],
-+                  304, 731-i*row_height, 259, row_height)
-+        crop_strip(c, [(r['id']+' 原图局部', region_crop(image, r)) for r in regions], 502, 397)
-     advice = '\n'.join(f"{r['target']}  /  {r['origin']}　{r['action']}\n"
+-    advice = '\n'.join(f"{r['target']}  /  {r['origin']}　{r['action']}\n"
+-                        f"依据：{r['basis']}　风险：{r['risk']}" for r in doc['advice'])
+-    block(c, '建议、图像依据与风险', advice, 32, 375, 530, 114)
+-    block(c, '仍需人工或专家核对的事项 · '+doc['uncertainty_origin'], doc['uncertainty'], 32, 249, 530, 51)
+-    caption(c, participation_summary(doc), 32, 190, 7)
+-
+-
+ def repair_page(c, doc):
+@@ -1112,2 +1083,4 @@ def make_pdf(d, kind):
+         fingerprint = ''
++    if kind == 'observation':
++        return observation_card.render_observation(doc, fingerprint, ROOT, UserError)
+     out = io.BytesIO()
+@@ -1117,3 +1090,3 @@ def make_pdf(d, kind):
+     c.setAuthor('壁画智护工作台')
+-    c.setSubject(title+'（已人工复核）')
++    c.setSubject(title+'（已记录人工复核意见）')
+     c.setCreator('壁画智护工作台')
+@@ -1126,6 +1099,5 @@ def make_pdf(d, kind):
+     c.setFont('NotoSansSC', 9)
+-    c.drawRightString(A4[0]-32, 799, '壁画智护  /  已人工复核')
++    c.drawRightString(A4[0]-32, 799, '壁画智护  /  复核意见记录')
+     c.setFont('NotoSansSC', 7)
+     c.setFillColor(HexColor('#c9d9cb'))
+-    c.drawString(32, 777, '标注：AI 初稿＝模型原文；人工修订＝改动初稿；人工填写＝人工新增；旧版待核＝历史进度。')
+     if fingerprint:
+@@ -1136,6 +1108,3 @@ def make_pdf(d, kind):
+         c.drawRightString(A4[0]-32, 776, datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC'))
+-    if kind == 'observation':
+-        observation_page(c, doc)
+-    else:
+-        repair_page(c, doc)
++    repair_page(c, doc)
+     sources = '图片及授权：'+doc['source']+'\n参考资料：'+doc['references']
 diff --git a/index.html b/index.html
-index 390acb6..5e89f19 100644
+index 390acb6..29f1729 100644
 --- a/index.html
 +++ b/index.html
 @@ -6,2 +6,4 @@
@@ -114,17 +133,18 @@ index 390acb6..5e89f19 100644
      </div>
 +    </details>
      <div class="section-title workspace-title" id="observe"><div><span class="section-num">02 / OBSERVE</span><h2>观察与人工复核</h2><p>每次点击仅调用一次模型，并替换当前标记和建议。<span id="call-provider"></span></p></div><button class="primary" id="analyze"><span>✦</span> AI 观察图像 <b>→</b></button></div>
-@@ -50,3 +48,8 @@
+@@ -50,11 +48,17 @@
        <div class="results-column">
 -        <div class="panel result-panel"><div class="result-heading"><div><span class="micro">HUMAN IN THE LOOP</span><h3>重点区域 <span id="region-count">0 / 3</span></h3></div><span class="step-pill">可编辑</span></div><p class="small-help">框选 1—3 处关注区域，点击局部图可按原图像素核对。</p><div id="regions" class="editable-list"><div class="empty-list">观察结果会出现在这里</div></div></div>
+-        <div class="panel result-panel recommendation-panel"><div class="result-heading"><div><span class="micro">EVIDENCE & RISK</span><h3>建议、依据与风险</h3></div><button class="text-button" id="add-rec">＋ 添加</button></div><div id="recommendations" class="editable-list"><div class="empty-list">AI 生成后可逐条修改，也可手动添加。</div></div><label class="uncertainty-label">不确定性 / 人工复核 <span id="uncertainty-origin" class="origin-label"></span><textarea id="uncertainty" maxlength="160" rows="3" placeholder="指出仅凭图像无法判断的内容及需专家复核的事项。"></textarea></label></div>
 +        <div class="inspector-switch" role="group" aria-label="选择编辑内容">
 +          <button type="button" id="show-regions" aria-pressed="true">区域观察</button>
 +          <button type="button" id="show-advice" aria-pressed="false">保护建议</button>
 +        </div>
 +        <div class="inspector-scroll">
 +        <div class="panel result-panel"><div class="result-heading"><div><span class="micro">HUMAN IN THE LOOP</span><h3>重点区域 <span id="region-count">0 / 3</span></h3></div><span class="step-pill">逐处核对</span></div><p class="small-help">框选 1—3 处关注区域，点击局部图可按原图像素核对。</p><div id="region-picker" role="group" aria-label="选择关注区域"></div><div id="regions" class="editable-list"><div class="empty-list">观察结果会出现在这里</div></div></div>
-         <div class="panel result-panel recommendation-panel"><div class="result-heading"><div><span class="micro">EVIDENCE & RISK</span><h3>建议、依据与风险</h3></div><button class="text-button" id="add-rec">＋ 添加</button></div><div id="recommendations" class="editable-list"><div class="empty-list">AI 生成后可逐条修改，也可手动添加。</div></div><label class="uncertainty-label">不确定性 / 人工复核 <span id="uncertainty-origin" class="origin-label"></span><textarea id="uncertainty" maxlength="160" rows="3" placeholder="指出仅凭图像无法判断的内容及需专家复核的事项。"></textarea></label></div>
-@@ -54,7 +57,8 @@
++        <div class="panel result-panel recommendation-panel"><div class="result-heading"><div><span class="micro">EVIDENCE & RISK</span><h3>建议、依据与风险</h3></div><button class="text-button" id="add-rec">＋ 添加</button></div><div id="recommendations" class="editable-list"><div class="empty-list">AI 生成后可逐条修改，也可手动添加。</div></div><label class="uncertainty-label">图像判断的范围与限制 <span id="uncertainty-origin" class="origin-label"></span><textarea id="uncertainty" maxlength="160" rows="3" placeholder="说明本次图像能支持的判断与不能支持的推断。"></textarea></label></div>
+       </div>
      </div>
 -    <div class="section-title" id="restore"><div><span class="section-num">03 / VIRTUAL REPAIR</span><h2>按破损类型修复</h2><p>先判类型：大裂隙补表里再续纹样，小裂缝用仿制图章向内补；范围外像素保持不变。</p></div><button class="secondary" id="do-restore"><span>◈</span> 一键修复 <b>→</b></button></div>
 +    </div>
@@ -165,7 +185,7 @@ index 390acb6..5e89f19 100644
 @@ -88,3 +95,3 @@
      <div class="panel checklist-panel"><div class="result-heading"><div><span class="micro">PREFLIGHT</span><h3>导出前检查</h3></div><span class="step-pill" id="checklist-summary">0 / 8</span></div><ul id="checklist" class="checklist"></ul><p id="term-hint" class="term-hint" hidden></p></div>
 -    <div class="deliver-grid"><div class="panel review-panel"><div class="result-heading"><div><span class="micro">FINAL REVIEW</span><h3>人工复核确认</h3></div><span class="review-symbol">✓</span></div><p>我已对照原图核对位置与描述，检查建议依据、风险、来源与 AI 使用披露，并理解这不是专业鉴定或实体修复方案。</p><label class="tools-note">其他工具或平台操作记录（如有）<textarea id="other-tools" maxlength="120" rows="2" placeholder="填写实际使用的第三方工具、千问办公步骤或记录出处。"></textarea></label><label class="checkbox"><input id="reviewed" type="checkbox"><span>已完成人工复核</span></label><div class="rule-note"><b>赛事提示</b>线上可使用此实验流程；现场必须使用千问办公，并仅调用百炼能力。切换模型不等于自动满足现场平台要求。</div></div>
-+    <div class="deliver-grid"><div class="panel review-panel"><div class="result-heading"><div><span class="micro">FINAL REVIEW</span><h3>对照原图确认</h3></div><span class="review-symbol">✓</span></div><p>导出前，请逐个打开 R1、R2 等区域，确认描述是否准确，再检查建议、资料来源和工具记录。</p><label class="tools-note">其他工具或平台操作记录（如有）<textarea id="other-tools" maxlength="120" rows="2" placeholder="填写实际使用的第三方工具、千问办公步骤或记录出处。"></textarea></label><label class="checkbox"><input id="reviewed" type="checkbox"><span>我已核对这些内容，可以导出</span></label><div class="rule-note"><b>赛事提示</b>线上可使用此实验流程；现场必须使用千问办公，并仅调用百炼能力。切换模型不等于自动满足现场平台要求。</div></div>
++    <div class="deliver-grid"><div class="panel review-panel"><div class="result-heading"><div><span class="micro">FINAL REVIEW</span><h3>对照原图确认</h3></div><span class="review-symbol">✓</span></div><p>逐区域选择本次结论与理由，核对图像依据、建议和来源。图像无法支持判断时，可明确记录“本图无法判断”。</p><label class="tools-note">其他工具或平台操作记录（如有）<textarea id="other-tools" maxlength="120" rows="2" placeholder="填写实际使用的第三方工具、千问办公步骤或记录出处。"></textarea></label><label class="checkbox"><input id="reviewed" type="checkbox"><span>已核对本次结论、理由与来源</span></label><div class="rule-note"><b>赛事提示</b>线上可使用此实验流程；现场必须使用千问办公，并仅调用百炼能力。切换模型不等于自动满足现场平台要求。</div></div>
        <div class="panel export-panel"><div class="result-heading"><div><span class="micro">EXPORT FILES</span><h3>导出成果</h3></div></div><div class="export-list"><button id="export-observation"><span class="file-icon">PDF</span><span><b>一页 AI 壁画观察卡</b><small>区域、建议、风险与来源</small></span><i>↗</i></button><button id="export-repair"><span class="file-icon">PDF</span><span><b>一页虚拟修复说明</b><small>原图、结果及处理依据</small></span><i>↗</i></button><button id="export-result"><span class="file-icon">PNG</span><span><b>虚拟修复示意图</b><small>无损保存处理结果</small></span><i>↗</i></button><button id="export-images"><span class="file-icon">PNG</span><span><b>修复前后对照图</b><small>原图与处理结果并排</small></span><i>↗</i></button><button id="export-log"><span class="file-icon">JSON</span><span><b>本地过程记录</b><small>包含模型信息与编辑结果</small></span><i>↗</i></button></div><p id="fingerprint" class="fingerprint">导出后在此显示记录指纹，可与 PDF 页眉和过程记录核对。</p></div></div>
 @@ -93,5 +100,30 @@
  </div>
@@ -211,7 +231,7 @@ index 390acb6..5e89f19 100644
 +<script src="/static/comparison-view.js"></script>
  </body></html>
 diff --git a/static/app.js b/static/app.js
-index 809568f..008f908 100644
+index 809568f..fd1cb19 100644
 --- a/static/app.js
 +++ b/static/app.js
 @@ -132,3 +132,4 @@ function applyRepairPolicy(){
@@ -222,7 +242,7 @@ index 809568f..008f908 100644
  }
 @@ -196,2 +197,3 @@ function checklistItems(){
      ['关注区域 1—3 个且均有说明',regionsOk],
-+    ['每个区域都已确认描述，并填写依据（观察卡）',regionsOk && state.regions.every(hasEvidence)],
++    ['各区域已选择本次结论、理由与依据（观察卡）',regionsOk && state.regions.every(hasEvidence)],
      ['建议 1—2 条，目标、依据、风险完整',adviceOk],
 @@ -316,3 +318,3 @@ async function loadImage(file,isDemo=false){
      refreshTint();setMode('box');updateUndoButton();
@@ -256,6 +276,11 @@ index 809568f..008f908 100644
 -    notify(hit?'已采用推荐取样位置，可生成结果并检查取样框。':'已记录取样中心，可生成结果并检查取样框。');return;
 +    notify(hit?'已采用推荐取样位置，可生成结果并检查取样框。':'已选好要借用的图案。现在可以预览修复效果。');return;
    }
+@@ -838,3 +846,3 @@ $('download-ai').onclick=async()=>{
+ function textarea(value,placeholder,max,change){let el=document.createElement('textarea');el.rows=2;el.maxLength=max;el.placeholder=placeholder;el.value=value;el.addEventListener('input',()=>{change(el.value);invalidateReview()});return el}
+-const origins={human:'人工填写', ai:'AI 初稿', edited:'人工修订 AI', legacy:'旧版来源待核'};
++const origins={human:'人工填写', ai:'AI 初稿', edited:'人工修订 AI', legacy:'历史记录'};
+ function initialRow(item,group) {
 @@ -882,8 +890,30 @@ function regionThumb(row) {
    const h=Math.max(1,Math.min(cvs.height,Math.ceil((row.y+row.h)*cvs.height))-sy);
 -  const scale=Math.min(360/w,160/h,1), thumb=document.createElement('canvas');
@@ -480,7 +505,7 @@ index 809568f..008f908 100644
 @@ -1148,3 +1198,4 @@ function currentReview() {
    return {source:$('source').value,references:$('references').value,context:$('context').value,
 -    regions:state.regions.map(r=>({...r,origin:originOf(r,'regions')})),
-+    evidence_version:1,
++    evidence_version:2,
 +    regions:state.regions.map(r=>({...r,origin:originOf(r,'regions'),ai_observation:initialRow(r,'regions')?.observation || ''})),
      recommendations:state.recommendations.map(r=>({...r,origin:originOf(r,'recommendations')})),
 @@ -1167,2 +1218,6 @@ async function exportReport(kind,button) {
@@ -540,7 +565,7 @@ index 809568f..008f908 100644
 +} else {
 +  fetch(trialUrl,{method:'HEAD'}).then(r=>{ if(r.ok) $('open-trial').hidden=false; }).catch(()=>{});
 +}
- 
+
 @@ -1360 +1437,25 @@ updateUndoButton();
  pollAiModel();
 +

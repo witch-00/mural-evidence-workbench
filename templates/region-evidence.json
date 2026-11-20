@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "purpose": "空白记录模板",
   "case_id": null,
   "stage": null,
@@ -7,7 +7,7 @@
   "region": {"id": "R1", "normalized_box_xywh": null, "visible_feature": null, "alternative_explanation": null},
   "references": [],
   "ai_draft": {"tool": null, "model": null, "text": null, "platform_record_ref": null},
-  "review": {"decision": null, "revised_text": null, "reason": null, "reviewer": null, "at": null},
+  "review": {"decision": null, "reason_code": null, "source_type": null, "revised_text": null, "reason": null, "include_note": false, "reviewer": null, "at": null},
   "recommendations": [],
   "uncertainties": [],
   "candidate_versions": []

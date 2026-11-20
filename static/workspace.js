@@ -78,17 +78,21 @@ function revealPendingReview(row) {
   activeRegion=row.id; activeInspector='regions'; updateInspector();
   $('observe').scrollIntoView({block:'start'});
   const card=[...$('regions').children].find(item=>item.dataset.region===row.id);
-  const e=row.evidence || {};
-  let field,message;
-  if(!e.decision) {
+  const issue=evidenceIssue(row);
+  let field;
+  if(issue.field==='references') {
+    $('source-drawer').open=true;
+    field=$('references');
+  } else if(issue.field==='decision') {
     field=card.querySelector('.review-choices button');
-    message=row.id+' 还没确认。看一下这块原图，再选“描述准确”“我改过描述”或“暂时拿不准”。';
+  } else if(issue.field==='observation') {
+    field=card.querySelector('textarea');
   } else {
-    const key=!e.reference?.trim()?'reference':(!e.reason?.trim()?'reason':'follow_up');
-    field=card.querySelector('[data-evidence="'+key+'"]');
-    message=row.id+' 还少一项，请填写“'+evidenceFields.find(item=>item[0]===key)[1]+'”。';
+    field=card.querySelector('[data-evidence="'+issue.field+'"]');
   }
-  field.focus();notify(message,true);
+  const details=field.closest('details');if(details)details.open=true;
+  field.setAttribute('aria-invalid','true');
+  field.scrollIntoView({block:'center'});field.focus();notify(row.id+'：'+issue.message,true);
 }
 $('source-drawer').addEventListener('toggle',layoutCanvas);
 updateInspector();
