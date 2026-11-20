@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "purpose": "空白记录模板",
+  "case_id": null,
+  "stage": null,
+  "original": {"source": null, "permission": null, "sha256": null, "width_px": null, "height_px": null},
+  "region": {"id": "R1", "normalized_box_xywh": null, "visible_feature": null, "alternative_explanation": null},
+  "references": [],
+  "ai_draft": {"tool": null, "model": null, "text": null, "platform_record_ref": null},
+  "review": {"decision": null, "revised_text": null, "reason": null, "reviewer": null, "at": null},
+  "recommendations": [],
+  "uncertainties": [],
+  "candidate_versions": []
+}

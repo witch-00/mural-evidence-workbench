@@ -1,0 +1,12 @@
+.env
+.env.*
+!.env.example
+.model-settings.env
+.venv/
+__pycache__/
+data/
+uploads/
+models/
+*.sqlite*
+*.db
+*.mp4
