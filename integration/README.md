@@ -19,6 +19,8 @@ cp static/fonts/MuralSerifSC-* "$BASE/static/fonts/"
 
 工作台导入框可选择 JPEG、PNG、WebP 图片或 JSON 工作文件。若要启用一键试用，将可供本机队员查看的练习工作文件放在工作副本的 `sample/evidence-trial.json`；首页会显示“打开试用工作文件”，也可直接访问 `/?trial=evidence`。
 
+导入新图片后，“图像与资料”保持展开，便于继续填写图片来源与授权、参考资料和背景说明。填写完成后可手动折叠。
+
 
 ## 界面与字体
 

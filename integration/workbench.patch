@@ -251,7 +251,7 @@ index 809568f..fd1cb19 100644
      for(const id of ['repair-basis','repair-review','other-tools'])$(id).value='';
 @@ -323,2 +325,3 @@ async function loadImage(file,isDemo=false){
      else {$('source').value='';$('references').value='';$('context').value=''}
-+    $('source-drawer').open=false;
++    $('source-drawer').open=true;
      const megapixels=image.naturalWidth*image.naturalHeight/1e6;
 @@ -330,5 +333,10 @@ async function loadImage(file,isDemo=false){
  }
