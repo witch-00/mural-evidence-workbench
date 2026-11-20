@@ -13,3 +13,5 @@ cp static/region-evidence.js static/region-evidence.css "$BASE/static/"
 使用原工作台配置的 Python 环境及依赖。在 BASE 目录运行 `PORT=8766 python app.py`，浏览器打开 http://localhost:8766 。实例只监听回环地址，适合同一台电脑轮流试用。模型凭据继续由原工作台的配置机制管理。
 
 在本仓库根目录，用含原工作台测试依赖的 Python 运行 `PYTHONPATH="$BASE" python -m unittest discover -s tests`。工作文件 v1/v2 可恢复后补录依据；新文件使用 v3，保留每个区域的引用和复核记录。旧客户端仍可导出原格式观察卡。
+
+工作台导入框可选择 JPEG、PNG、WebP 图片或 JSON 工作文件。若要启用一键试用，将可供本机队员查看的练习工作文件放在工作副本的 `sample/evidence-trial.json`；首页会显示“打开试用工作文件”，也可直接访问 `/?trial=evidence`。

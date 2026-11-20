@@ -64,26 +64,46 @@ index b7f2385..3b42461 100644
 +        crop_strip(c, [(r['id']+' 原图局部', region_crop(image, r)) for r in regions], 502, 397)
      advice = '\n'.join(f"{r['target']}  /  {r['origin']}　{r['action']}\n"
 diff --git a/index.html b/index.html
-index 390acb6..00f1e7e 100644
+index 390acb6..65c34b6 100644
 --- a/index.html
 +++ b/index.html
 @@ -6,2 +6,3 @@
    <link rel="stylesheet" href="/static/style.css">
 +  <link rel="stylesheet" href="/static/region-evidence.css">
  </head>
+@@ -31,4 +32,4 @@
+       <div class="panel upload-panel"><div class="panel-head"><div><span class="micro">IMAGE INPUT</span><h3>导入壁画图像</h3></div><span class="panel-index">01</span></div>
+-        <label class="dropzone" id="dropzone"><input id="file" type="file" accept="image/png,image/jpeg,image/webp" hidden><span class="upload-icon">↥</span><b id="file-name">点击选择或拖入图片</b><small>PNG / JPG / WEBP · 不超过 150 MB</small></label>
+-        <div class="upload-foot"><span>请确认图片来源与授权</span><button class="text-button" id="load-demo" type="button">使用合成示例 ↗</button></div><div class="project-actions"><button class="text-button" id="save-project" type="button">↓ 保存工作进度</button><label class="text-button project-load">↑ 恢复工作进度<input id="load-project" type="file" accept="application/json,.json" hidden></label></div>
++        <label class="dropzone" id="dropzone"><input id="file" type="file" accept=".jpg,.jpeg,.png,.webp,.json,image/jpeg,image/png,image/webp,application/json" hidden><span class="upload-icon">↥</span><b id="file-name">选择图片或工作文件</b><small>图片：JPG / PNG / WebP · 工作进度：JSON</small></label>
++        <div class="upload-foot"><span>请确认图片来源与授权</span><button class="text-button" id="load-demo" type="button">使用合成示例 ↗</button></div><div class="project-actions"><button type="button" class="text-button" id="open-trial" hidden>打开试用工作文件</button><button class="text-button" id="save-project" type="button">↓ 保存工作进度</button><label class="text-button project-load">↑ 恢复工作进度（JSON）<input id="load-project" type="file" accept="application/json,.json" hidden></label></div>
+       </div>
 @@ -107,2 +108,3 @@
  <div id="toast" role="status" aria-live="polite"></div>
 +<script src="/static/region-evidence.js"></script>
  <script src="/static/app.js"></script>
 diff --git a/static/app.js b/static/app.js
-index 809568f..2408683 100644
+index 809568f..4fcdcfc 100644
 --- a/static/app.js
 +++ b/static/app.js
 @@ -196,2 +196,3 @@ function checklistItems(){
      ['关注区域 1—3 个且均有说明',regionsOk],
 +    ['各区域已注明依据和复核决定（观察卡）',regionsOk && state.regions.every(hasEvidence)],
      ['建议 1—2 条，目标、依据、风险完整',adviceOk],
-@@ -892,3 +893,11 @@ function regionThumb(row) {
+@@ -330,5 +331,10 @@ async function loadImage(file,isDemo=false){
+ }
+-$('file').addEventListener('change',e=>{loadImage(e.target.files[0]);e.target.value=''});
++function importFile(file) {
++  if(!file)return;
++  if(/\.json$/i.test(file.name) || file.type === 'application/json') return restoreProject(file);
++  return loadImage(file);
++}
++$('file').addEventListener('change',e=>{importFile(e.target.files[0]);e.target.value=''});
+ $('load-demo').onclick=async()=>{try{const response=await fetch('/sample/synthetic.png');const blob=await response.blob();loadImage(new File([blob],'合成示例.png',{type:'image/png'}),true)}catch{showOffline(true);notify(OFFLINE_TEXT,true)}};
+-const drop=$('dropzone');['dragenter','dragover'].forEach(n=>drop.addEventListener(n,e=>{e.preventDefault();drop.classList.add('drag')}));['dragleave','drop'].forEach(n=>drop.addEventListener(n,e=>{e.preventDefault();drop.classList.remove('drag')}));drop.addEventListener('drop',e=>loadImage(e.dataTransfer.files[0]));
++const drop=$('dropzone');['dragenter','dragover'].forEach(n=>drop.addEventListener(n,e=>{e.preventDefault();drop.classList.add('drag')}));['dragleave','drop'].forEach(n=>drop.addEventListener(n,e=>{e.preventDefault();drop.classList.remove('drag')}));drop.addEventListener('drop',e=>importFile(e.dataTransfer.files[0]));
+ function setMode(mode, redrawId=null) {
+@@ -892,3 +898,11 @@ function regionThumb(row) {
      $('detail-title').textContent=row.id+' 原图细节 · '+w+' × '+h+' 像素';
 -    $('detail-observation').textContent=row.observation;
 +    const e = row.evidence || {};
@@ -96,11 +116,11 @@ index 809568f..2408683 100644
 +    }
 +    $('detail-observation').textContent=lines.join('\n');
      $('detail-view').showModal();
-@@ -935,2 +944,3 @@ function renderLists() {
+@@ -935,2 +949,3 @@ function renderLists() {
      const draft=draftDetails(r,'regions');if(draft)card.append(draft);
 +    card.append(evidenceEditor(r));
      regions.append(card);
-@@ -984,6 +994,8 @@ function applyObservation(result,inputSnapshot) {
+@@ -984,6 +999,8 @@ function applyObservation(result,inputSnapshot) {
  }
 -$('analyze').onclick=async()=>{if(!state.imageData)return notify('请先导入图片。',true);if(!$('source').value.trim())return notify('请先填写图片来源和授权。',true);let btn=$('analyze');setBusy(btn,true,'模型正在观察，请稍候…');try{
 +$('analyze').onclick=async()=>{if(!state.imageData)return notify('请先导入图片。',true);if(!$('source').value.trim())return notify('请先填写图片来源和授权。',true);if(state.regions.some(row=>Object.values(row.evidence || {}).some(Boolean)) && !confirm('重新观察会替换当前区域及其复核记录。继续前请保存需要保留的工作进度。'))return;let btn=$('analyze');setBusy(btn,true,'模型正在观察，请稍候…');try{
@@ -110,24 +130,56 @@ index 809568f..2408683 100644
    if(state.loadTicket!==ticket || state.imageData!==imageAtRequest || $('source').value!==inputSnapshot.source || $('references').value!==inputSnapshot.references || $('context').value!==inputSnapshot.context) throw new Error('请求期间图片或资料已变化，本次结果未应用；请核对后再观察。');
 +  if(JSON.stringify(currentReview())!==reviewBeforeRequest)throw new Error('等待期间复核内容已变动，已保留你的编辑。');
    applyObservation(result,inputSnapshot);notify('模型观察已完成，请按编号核对原图局部与建议。');
-@@ -1148,3 +1160,4 @@ function currentReview() {
+@@ -1148,3 +1165,4 @@ function currentReview() {
    return {source:$('source').value,references:$('references').value,context:$('context').value,
 -    regions:state.regions.map(r=>({...r,origin:originOf(r,'regions')})),
 +    evidence_version:1,
 +    regions:state.regions.map(r=>({...r,origin:originOf(r,'regions'),ai_observation:initialRow(r,'regions')?.observation || ''})),
      recommendations:state.recommendations.map(r=>({...r,origin:originOf(r,'recommendations')})),
-@@ -1227,3 +1240,3 @@ $('save-project').onclick=()=>{
+@@ -1227,3 +1245,3 @@ $('save-project').onclick=()=>{
    eventRecord('保存工作进度');
 -  const project={...currentReview(),version:2,notice:'工作文件含图片、资料与模型输出，请妥善保存。',
 +  const project={...currentReview(),version:3,notice:'工作文件含图片、资料与模型输出，请妥善保存。',
      image:state.imageData,mask:state.hasMask?mask.toDataURL('image/png'):null,restored:state.restored,
-@@ -1264,3 +1277,3 @@ function projectRegions(project) {
+@@ -1264,3 +1282,3 @@ function projectRegions(project) {
      used.add(id);
 -    return {...box,id,observation:String(row.observation||'').slice(0,100),ai_index:row.ai_index,
 +    return {...box,id,evidence:readEvidence(row.evidence),observation:String(row.observation||'').slice(0,100),ai_index:row.ai_index,
              legacy_origin:project.version===1?!!project.model:!!row.legacy_origin};
-@@ -1282,3 +1295,3 @@ $('load-project').addEventListener('change',async e=>{
+@@ -1276,3 +1294,5 @@ function projectAdvice(project,regions) {
+ $('load-project').addEventListener('change',async e=>{
+-  const file=e.target.files[0];e.target.value='';if(!file)return;
++  const file=e.target.files[0];e.target.value='';if(file) await restoreProject(file);
++});
++async function restoreProject(file) {
+   if(state.dirty && !confirm('当前工作尚未保存，恢复进度会覆盖现有内容。是否继续？'))return;
+@@ -1282,3 +1302,3 @@ $('load-project').addEventListener('change',async e=>{
      const p=JSON.parse(await file.text());
 -    if(![1,2].includes(p.version) || !Array.isArray(p.regions) || p.regions.length>3 ||
 +    if(![1,2,3].includes(p.version) || !Array.isArray(p.regions) || p.regions.length>3 ||
         !Array.isArray(p.recommendations) || p.recommendations.length>2)throw new Error('工作文件格式无效。');
+@@ -1325,4 +1345,23 @@ $('load-project').addEventListener('change',async e=>{
+     notify(p.version===1?'已恢复旧版进度。导出前请补选建议对应区域或填写修复依据。':'工作进度已恢复，请重新复核后导出。');
++    return true;
+   } catch(err){notify(err.message||'工作文件无法读取。',true)}
+-});
++}
++const trialUrl='/sample/evidence-trial.json';
++async function openTrial() {
++  const button=$('open-trial');
++  button.disabled=true;
++  try {
++    const response=await fetch(trialUrl);
++    if(!response.ok)throw new Error('未能读取试用文件，可点击“恢复工作进度（JSON）”选择文件。');
++    if(await restoreProject(await response.blob())) $('observe').scrollIntoView();
++  } catch(error) { notify(error.message,true); }
++  finally { button.disabled=false; }
++}
++$('open-trial').onclick=openTrial;
++if(new URLSearchParams(location.search).get('trial')==='evidence') {
++  $('open-trial').hidden=false;
++  openTrial();
++} else {
++  fetch(trialUrl,{method:'HEAD'}).then(r=>{ if(r.ok) $('open-trial').hidden=false; }).catch(()=>{});
++}
+ 
