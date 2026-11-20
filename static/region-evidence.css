@@ -1,0 +1,5 @@
+.region-evidence{margin:14px 0 4px;padding:12px;border:1px solid #cedbd4;border-radius:6px;background:#f6f8f4}
+.region-evidence legend{padding:0 6px;color:#254e46;font-weight:650}
+.region-evidence label{display:grid;gap:4px;margin:7px 0;font-size:13px;color:#314a42}
+.region-evidence select,.region-evidence textarea{width:100%;font:inherit}
+#detail-observation{white-space:pre-line}

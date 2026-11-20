@@ -1,0 +1,133 @@
+diff --git a/app.py b/app.py
+index b7f2385..3b42461 100644
+--- a/app.py
++++ b/app.py
+@@ -939,2 +939,18 @@ def validate_document(d, kind):
+     if kind == 'observation':
++        if 'evidence_version' in d:
++            if type(d['evidence_version']) is not int or d['evidence_version'] != 1:
++                raise UserError('无法识别该区域证据卡的格式。')
++            for region, row in zip(doc['regions'], d['regions']):
++                rid = region['id']
++                e = row.get('evidence')
++                if not isinstance(e, dict) or e.get('decision') not in ('保留观察', '修正观察', '暂缓判断'):
++                    raise UserError(f'请为 {rid} 选择人工复核决定。')
++                fields = [('reference', '依据', 80, True), ('alternative', '另一种解释', 60, False),
++                          ('reason', '复核理由', 80, True), ('follow_up', '还需核实', 60, e['decision'] == '暂缓判断')]
++                region['evidence'] = {'decision': e['decision']}
++                for key, label, limit, required in fields:
++                    if not isinstance(e.get(key, ''), str):
++                        raise UserError(f'{rid} 的{label}格式无效。')
++                    region['evidence'][key] = checked_text(e.get(key), limit, f'{rid} 的{label}', required)
++                region['ai_observation'] = checked_text(row.get('ai_observation'), 100, f'{rid} 的 AI 初稿')
+         doc['advice'] = reviewed_advice(d.get('recommendations'), doc['regions'], legacy_origin)
+@@ -1059,10 +1075,33 @@ def observation_page(c, doc):
+     image, regions = doc['image'], doc['regions']
+-    caption(c, '原图与区域编号', 32, 747)
+-    bounds = place_image(c, image, 32, 523, 257, 212)
+-    mark_regions(c, bounds, regions)
+-    row_height = 212 / len(regions)
+-    for i, r in enumerate(regions):
+-        block(c, f"{r['id']}  ·  {r['origin']}", r['observation'],
+-              304, 731-i*row_height, 259, row_height)
+-    crop_strip(c, [(r['id']+' 原图局部', region_crop(image, r)) for r in regions], 502, 397)
++    if 'evidence' in regions[0]:
++        caption(c, '原图与区域编号', 32, 747)
++        bounds = place_image(c, image, 32, 610, 210, 127)
++        mark_regions(c, bounds, regions)
++        width = (310 - 8*(len(regions)-1)) / len(regions)
++        for i, r in enumerate(regions):
++            x = 252 + i*(width+8)
++            caption(c, r['id']+' 原图局部', x, 747)
++            place_image(c, region_crop(image,r), x, 610, width, 127)
++        row_height = 217 / len(regions)
++        for i, r in enumerate(regions):
++            e = r['evidence']
++            lines = ['可见现象　'+r['observation']]
++            if r['ai_observation']:
++                lines.append('AI 初稿　'+r['ai_observation'])
++            if e['alternative']:
++                lines.append('另一种解释　'+e['alternative'])
++            lines.extend(['依据　'+e['reference'], '理由　'+e['reason']])
++            if e['follow_up']:
++                lines.append('还需核实　'+e['follow_up'])
++            block(c, f"{r['id']} · {r['origin']} ／ 人工决定：{e['decision']}",
++                  '\n'.join(lines), 32, 595-i*row_height, 530, row_height)
++    else:
++        caption(c, '原图与区域编号', 32, 747)
++        bounds = place_image(c, image, 32, 523, 257, 212)
++        mark_regions(c, bounds, regions)
++        row_height = 212 / len(regions)
++        for i, r in enumerate(regions):
++            block(c, f"{r['id']}  ·  {r['origin']}", r['observation'],
++                  304, 731-i*row_height, 259, row_height)
++        crop_strip(c, [(r['id']+' 原图局部', region_crop(image, r)) for r in regions], 502, 397)
+     advice = '\n'.join(f"{r['target']}  /  {r['origin']}　{r['action']}\n"
+diff --git a/index.html b/index.html
+index 390acb6..00f1e7e 100644
+--- a/index.html
++++ b/index.html
+@@ -6,2 +6,3 @@
+   <link rel="stylesheet" href="/static/style.css">
++  <link rel="stylesheet" href="/static/region-evidence.css">
+ </head>
+@@ -107,2 +108,3 @@
+ <div id="toast" role="status" aria-live="polite"></div>
++<script src="/static/region-evidence.js"></script>
+ <script src="/static/app.js"></script>
+diff --git a/static/app.js b/static/app.js
+index 809568f..2408683 100644
+--- a/static/app.js
++++ b/static/app.js
+@@ -196,2 +196,3 @@ function checklistItems(){
+     ['关注区域 1—3 个且均有说明',regionsOk],
++    ['各区域已注明依据和复核决定（观察卡）',regionsOk && state.regions.every(hasEvidence)],
+     ['建议 1—2 条，目标、依据、风险完整',adviceOk],
+@@ -892,3 +893,11 @@ function regionThumb(row) {
+     $('detail-title').textContent=row.id+' 原图细节 · '+w+' × '+h+' 像素';
+-    $('detail-observation').textContent=row.observation;
++    const e = row.evidence || {};
++    const lines = [row.observation];
++    const initial = initialRow(row,'regions');
++    if(initial) lines.push('AI 初稿　'+initial.observation);
++    for(const [key,label] of evidenceFields) {
++      if(key === 'reason' && e.decision) lines.push('人工决定　'+e.decision);
++      if(e[key]) lines.push(label+'　'+e[key]);
++    }
++    $('detail-observation').textContent=lines.join('\n');
+     $('detail-view').showModal();
+@@ -935,2 +944,3 @@ function renderLists() {
+     const draft=draftDetails(r,'regions');if(draft)card.append(draft);
++    card.append(evidenceEditor(r));
+     regions.append(card);
+@@ -984,6 +994,8 @@ function applyObservation(result,inputSnapshot) {
+ }
+-$('analyze').onclick=async()=>{if(!state.imageData)return notify('请先导入图片。',true);if(!$('source').value.trim())return notify('请先填写图片来源和授权。',true);let btn=$('analyze');setBusy(btn,true,'模型正在观察，请稍候…');try{
++$('analyze').onclick=async()=>{if(!state.imageData)return notify('请先导入图片。',true);if(!$('source').value.trim())return notify('请先填写图片来源和授权。',true);if(state.regions.some(row=>Object.values(row.evidence || {}).some(Boolean)) && !confirm('重新观察会替换当前区域及其复核记录。继续前请保存需要保留的工作进度。'))return;let btn=$('analyze');setBusy(btn,true,'模型正在观察，请稍候…');try{
+   const ticket=state.loadTicket, imageAtRequest=state.imageData, inputSnapshot={source:$('source').value,references:$('references').value,context:$('context').value};
++  const reviewBeforeRequest=JSON.stringify(currentReview());
+   const result=await (await api('/api/analyze',{image:imageAtRequest,source:inputSnapshot.source,context:inputSnapshot.context,references:inputSnapshot.references})).json();
+   if(state.loadTicket!==ticket || state.imageData!==imageAtRequest || $('source').value!==inputSnapshot.source || $('references').value!==inputSnapshot.references || $('context').value!==inputSnapshot.context) throw new Error('请求期间图片或资料已变化，本次结果未应用；请核对后再观察。');
++  if(JSON.stringify(currentReview())!==reviewBeforeRequest)throw new Error('等待期间复核内容已变动，已保留你的编辑。');
+   applyObservation(result,inputSnapshot);notify('模型观察已完成，请按编号核对原图局部与建议。');
+@@ -1148,3 +1160,4 @@ function currentReview() {
+   return {source:$('source').value,references:$('references').value,context:$('context').value,
+-    regions:state.regions.map(r=>({...r,origin:originOf(r,'regions')})),
++    evidence_version:1,
++    regions:state.regions.map(r=>({...r,origin:originOf(r,'regions'),ai_observation:initialRow(r,'regions')?.observation || ''})),
+     recommendations:state.recommendations.map(r=>({...r,origin:originOf(r,'recommendations')})),
+@@ -1227,3 +1240,3 @@ $('save-project').onclick=()=>{
+   eventRecord('保存工作进度');
+-  const project={...currentReview(),version:2,notice:'工作文件含图片、资料与模型输出，请妥善保存。',
++  const project={...currentReview(),version:3,notice:'工作文件含图片、资料与模型输出，请妥善保存。',
+     image:state.imageData,mask:state.hasMask?mask.toDataURL('image/png'):null,restored:state.restored,
+@@ -1264,3 +1277,3 @@ function projectRegions(project) {
+     used.add(id);
+-    return {...box,id,observation:String(row.observation||'').slice(0,100),ai_index:row.ai_index,
++    return {...box,id,evidence:readEvidence(row.evidence),observation:String(row.observation||'').slice(0,100),ai_index:row.ai_index,
+             legacy_origin:project.version===1?!!project.model:!!row.legacy_origin};
+@@ -1282,3 +1295,3 @@ $('load-project').addEventListener('change',async e=>{
+     const p=JSON.parse(await file.text());
+-    if(![1,2].includes(p.version) || !Array.isArray(p.regions) || p.regions.length>3 ||
++    if(![1,2,3].includes(p.version) || !Array.isArray(p.regions) || p.regions.length>3 ||
+        !Array.isArray(p.recommendations) || p.recommendations.length>2)throw new Error('工作文件格式无效。');
