@@ -284,3 +284,66 @@ input:not([type=range]):not([type=checkbox]),textarea,select { font-size: 15px; 
 .detail-button .region-thumb { display: block; inline-size: 100%; block-size: auto; margin: 0; border-radius: 4px 4px 0 0; }
 .thumb-caption { display: flex; justify-content: space-between; gap: 12px; padding: 6px 10px; background: #f2e9dc; color: #79664c; font-size: 11px; }
 .thumb-caption span:last-child { color: var(--accent); }
+
+/* A mural arch with exposed pigment layers. */
+.brand-symbol {
+  position: relative; display: block; flex: none; inline-size: 40px; block-size: 44px;
+  background: #97433b; border-radius: 22px 22px 5px 5px;
+  clip-path: polygon(0 0,100% 0,100% 65%,88% 72%,94% 84%,76% 100%,0 100%);
+}
+.brand-layer {
+  position: absolute; inset: 6px 6px 0; background: #c4a274; border-radius: 18px 18px 0 0;
+}
+.brand-pigment {
+  position: absolute; inset: 11px 11px 0; background: #627a6c; border-radius: 13px 13px 0 0;
+}
+.brand-pigment::after {
+  content: ""; position: absolute; inset: 17px -10px -2px 5px;
+  background: var(--paper); clip-path: polygon(10% 0,28% 0,52% 35%,100% 48%,100% 66%,40% 52%);
+}
+.repair-method-buttons { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; margin-block-start: 10px; }
+.repair-method-buttons button { position: relative; min-inline-size: 0; padding: 10px; text-align: start; border: 1px solid #d8cbb6; border-radius: 5px; background: #fffcf6; color: #5c4c39; }
+.repair-method-buttons strong { display: block; font-size: 15px; font-weight: 500; }
+.repair-method-buttons span { display: block; margin-block-start: 4px; color: #8b7a61; font-size: 11px; line-height: 1.5; }
+.repair-method-buttons button[aria-pressed=true] { border-color: #9b443b; background: #f4e5d7; box-shadow: inset 3px 0 #9b443b; }
+.repair-method-buttons button[aria-pressed=true] strong { color: #8d302d; }
+.more-methods { margin-block-start: 12px; font-size: 12px; color: #897354; }
+.more-methods summary { cursor: pointer; }
+.review-choices { display: flex; flex-wrap: wrap; gap: 6px; margin-block: 8px 12px; }
+.review-choices button { padding: 7px 10px; border: 1px solid #d2c3ac; border-radius: 4px; color: #78634b; background: #fdf9f1; font-size: 13px; }
+.review-choices button[aria-pressed=true] { background: #f1dfcd; color: #84392e; border-color: #a76a50; box-shadow: inset 0 -2px #a76a50; }
+#comparison-view { inline-size: 100%; block-size: 100dvh; max-inline-size: none; max-block-size: none; margin: 0; padding: 0; border: 0; border-radius: 0; background: #262b27; color: #eee4d3; }
+#comparison-view[open] { display: flex; flex-direction: column; }
+.comparison-header { display: flex; flex: none; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 22px; background: #f6f0e6; color: #67543e; border-block-end: 1px solid #baa88c; }
+.comparison-header strong { font-size: 18px; font-weight: 500; }
+.comparison-header button,.comparison-footer button { font-family: var(--font-book); padding: 6px 14px; border: 1px solid #cdb99c; border-radius: 4px; background: #fcf7ee; color: #7f533b; }
+.comparison-header button[aria-pressed=true] { color: #842f2c; border-color: #9e5950; background: #ead6c3; box-shadow: inset 0 -2px #9e5950; }
+.comparison-view-buttons { display: flex; gap: 8px; }
+.fullscreen-stage { display: grid; place-items: center; flex: 1 1 0; min-block-size: 0; min-inline-size: 0; overflow: clip; }
+.fullscreen-pair { position: relative; flex: none; max-inline-size: none; max-block-size: none; line-height: 0; }
+.fullscreen-pair img { display: block; inline-size: 100%; block-size: 100%; user-select: none; pointer-events: none; }
+.fullscreen-before-clip { position: absolute; inset: 0; clip-path: inset(0 50% 0 0); }
+.fullscreen-divider { position: absolute; inset-block: 0; inset-inline-start: 50%; inline-size: 2px; background: #fff7e9; pointer-events: none; }
+.fullscreen-divider::after { content: "↔"; position: absolute; inset-block-start: 50%; transform: translate(-50%,-50%); inline-size: 42px; block-size: 42px; border-radius: 50%; background: #fff7e9; color: #963b37; display: grid; place-items: center; font-size: 22px; }
+#fullscreen-range { position: absolute; inset: 0; opacity: 0; inline-size: 100%; block-size: 100%; cursor: ew-resize; margin: 0; }
+#fullscreen-range:focus-visible { outline: 3px solid #f1ca84; opacity: .08; }
+.fullscreen-label { position: absolute; inset-block-start: 16px; padding: 10px 14px; background: #232a24bc; border: 1px solid #c7b99a80; color: #fff4df; border-radius: 4px; font-size: 15px; line-height: 1; pointer-events: none; }
+.fullscreen-label.before { inset-inline-start: 18px; }
+.fullscreen-label.after { inset-inline-end: 18px; }
+.comparison-footer { display: flex; flex: none; justify-content: space-between; align-items: center; gap: 12px; margin: 0; padding: 10px 22px; background: #f6f0e6; color: #816e54; border-block-start: 1px solid #baa88c; font-size: 13px; }
+.comparison-footer > div { display: flex; gap: 7px; }
+@media(max-width:760px) {
+  .comparison-header { padding: 8px 12px; flex-wrap: wrap; gap: 8px; }
+  .comparison-header strong { font-size: 15px; }
+  .comparison-view-buttons { gap: 4px; }
+  .comparison-header button { padding-inline: 8px; font-size: 12px; }
+  .comparison-footer { padding: 8px 12px; flex-wrap: wrap; gap: 6px; font-size: 11px; }
+  .comparison-footer button { padding-inline: 10px; }
+  .fullscreen-label { inset-block-start: 8px; padding: 6px 8px; font-size: 12px; }
+  .fullscreen-label.before { inset-inline-start: 8px; }
+  .fullscreen-label.after { inset-inline-end: 8px; }
+  .brand-symbol { inline-size: 34px; block-size: 38px; }
+}
+#comparison-view { inline-size: 100dvw; }
+.compare-inner > img { inline-size: 100%; block-size: 100%; max-block-size: none; max-inline-size: none; }
+.ai-model { background: #f1e6d6; border: 1px solid #dac8af; color: #756148; border-radius: 4px; padding: 8px 10px; font-size: 12px; }

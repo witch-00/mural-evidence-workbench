@@ -7,7 +7,7 @@
 ```bash
 git -C "$BASE" apply --check "$PWD/integration/workbench.patch" &&
 git -C "$BASE" apply "$PWD/integration/workbench.patch" &&
-cp static/region-evidence.js static/region-evidence.css static/workspace.js static/workspace.css "$BASE/static/" &&
+cp static/region-evidence.js static/region-evidence.css static/workspace.js static/workspace.css static/repair-controls.js static/comparison-view.js "$BASE/static/" &&
 cp -R static/vendor "$BASE/static/"
 ```
 
@@ -25,3 +25,27 @@ cp -R static/vendor "$BASE/static/"
 字体优先使用队员电脑已经安装的方正书宋简体和华文楷体，依次回退到华文宋体、宋体、楷体及系统衬线字体。字体文件由各自设备提供。公开仓库包含 CSS 字体配置，Panzoom 的 MIT 许可证与发行文件位于同一目录。
 
 2026 年 11 月 20 日，用 1440、1024、390 像素视口验证了区域切换、建议面板、弹窗裁片尺寸、缩放、关闭按钮与页面溢出。另从浏览器实际调用 LaMa 处理合成图的跨边框区域，验证范围外像素一致、局部/全图切换与单页报告导出。该合成测试反映此例的工程行为，真实题图逐处复核后采纳。
+
+
+## 修复方法的入口
+
+| 常用按钮 | 实际处理 | 选用时机 |
+|---|---|---|
+| 自动补全 | LaMa 根据邻近画面补画 | 线条、色块交错的小范围缺损，生成后检查是否新增内容 |
+| 借用原图 | 人工选一处完好图案，再按缺口形状复制与融合 | 同图中有大小、方向相近的重复花纹 |
+| 细缝填色 | OpenCV Telea 从附近颜色填充 | 窄裂缝或单色区域；复杂花纹要检查模糊情况 |
+| 百炼重绘 | 通过百炼调用图像生成能力 | 已配置相应百炼权益，需要云端重绘 |
+
+原有按形状处理、分层填补、纹理比对、补全后匹配纹理，集中放在“其他处理方法”按钮区，旧工作文件保留原算法编号。界面合并的是选择入口，已有方法仍可复现。
+
+“借用原图”的操作示例是涂住破损圆花，再点同图另一朵完好圆花的中间。程序以这一点为中心，截取与修补范围相应大小的来源块。可先让程序推荐位置，再对照绿框确认。区域确认按钮用“描述准确／我改过描述／暂时拿不准”，分别对应旧存档中的保留、修正、暂缓决定。导出缺项会跳回具体区域和输入项。
+
+## 真实壁画演练
+
+examples/guangsheng-mural.jpg 是广胜寺《药师佛法会图》的缩小摄影图。作品与图像出处、权利说明和指纹见 examples/source.json。该图保留原有可见状态，缩小至 2000 × 970 像素供浏览器使用。
+
+开发实测通过当前已配置的 DeepSeek Flash 接口取得三处观察初稿，人工保留两处用于单页观察卡。用 LaMa 对右下方一处小范围做数字试补，983 个处理像素，范围外变化 0，实测推理约 3.3 秒。已从界面导出一页观察卡、一页修复说明及前后对照图。模型原始初稿、开发测试填写的复核与建议修订分开留存。此例记录的是一次功能测试，缺损成因和恢复内容仍待专业核实。
+
+运行环境若在 sample/real-mural.json 放入该次工作进度，首页会出现“打开真实壁画示例”，访问 /?trial=real 可直接查看，恢复后须重新核对再导出。全屏对照使用铺满视口的原生 dialog，局部窗口按实际处理像素定位，并有异步更新顺序校验。普通裁片查看继续保留独立窗口。
+
+[作品馆藏页](https://www.metmuseum.org/art/collection/search/42716) · [图像及公有领域说明](https://commons.wikimedia.org/wiki/File:Buddha_of_Medicine_Bhaishajyaguru_(Yaoshi_fo)_-_Google_Art_Project.jpg)

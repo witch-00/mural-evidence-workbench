@@ -74,30 +74,21 @@ window.addEventListener('resize',()=>{
   if($('detail-view').open) fitDetail();
   layoutCanvas();
 });
-for(const name of ['full','local']) {
-  $('compare-'+name).onclick = () => {
-    state.compareWhole = name === 'full';
-    $('compare-full').setAttribute('aria-pressed',String(state.compareWhole));
-    $('compare-local').setAttribute('aria-pressed',String(!state.compareWhole));
-    if(state.restored) showComparison();
-  };
+function revealPendingReview(row) {
+  activeRegion=row.id; activeInspector='regions'; updateInspector();
+  $('observe').scrollIntoView({block:'start'});
+  const card=[...$('regions').children].find(item=>item.dataset.region===row.id);
+  const e=row.evidence || {};
+  let field,message;
+  if(!e.decision) {
+    field=card.querySelector('.review-choices button');
+    message=row.id+' 还没确认。看一下这块原图，再选“描述准确”“我改过描述”或“暂时拿不准”。';
+  } else {
+    const key=!e.reference?.trim()?'reference':(!e.reason?.trim()?'reason':'follow_up');
+    field=card.querySelector('[data-evidence="'+key+'"]');
+    message=row.id+' 还少一项，请填写“'+evidenceFields.find(item=>item[0]===key)[1]+'”。';
+  }
+  field.focus();notify(message,true);
 }
-$('compare-detail').onclick = async () => {
-  if(!state.restored) return notify('生成候选后，可在这里放大核对。');
-  const revision = state.repairRevision;
-  const [before,after] = await Promise.all([
-    loadImageElement($('before-img').src),loadImageElement($('after-img').src)
-  ]);
-  if(revision !== state.repairRevision) return;
-  const canvas = $('detail-canvas');
-  canvas.width = before.width*2;
-  canvas.height = before.height;
-  const context = canvas.getContext('2d');
-  context.drawImage(before,0,0);
-  context.drawImage(after,before.width,0);
-  $('detail-title').textContent = '修复核对 · 左侧原图 / 右侧候选';
-  $('detail-observation').textContent = '左侧为原图，右侧为同位置的修复候选。\n\n重点检查线条是否连续、边缘有无模糊或新增纹样，再决定是否采用。\n\n可滚轮缩放，拖动画面查看细节。';
-  openDetail();
-};
 $('source-drawer').addEventListener('toggle',layoutCanvas);
 updateInspector();
