@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#963b37">
+  <title>API 模型配置 · 壁画智护</title>
+  <link rel="stylesheet" href="/static/model-config.css">
+  <script src="/static/model-config.js" defer></script>
+</head>
+<body>
+  <header class="page-header">
+    <a class="brand" href="/" aria-label="壁画智护工作台">
+      <span class="brand-symbol" aria-hidden="true"><span class="brand-layer"></span><span class="brand-pigment"></span></span>
+      <span class="brand-name">壁画智护<small>MURAL CONSERVATION</small></span>
+    </a>
+    <a class="back-link" href="/">← 返回工作台</a>
+  </header>
+  <main class="config-page">
+    <div class="page-title"><p class="eyebrow">工作台设置 / 模型服务</p><h1>API 模型配置</h1><p>连接支持图像输入的模型，测试通过后保存。</p></div>
+    <div class="config-layout">
+      <section class="config-card" aria-labelledby="connection-title">
+        <div class="card-heading"><h2 id="connection-title">接口与模型</h2><span>OpenAI 兼容接口</span></div>
+        <form id="form" method="post" action="/api/model-config/test" aria-labelledby="connection-title">
+          <div class="field">
+            <label for="base">API 地址 <span class="required">必填</span></label>
+            <input id="base" name="base_url" type="url" required placeholder="https://api.example.com/v1" spellcheck="false" autocapitalize="none" autocorrect="off" aria-describedby="base-help">
+            <p class="field-help" id="base-help">填写服务商的 HTTPS 接口地址，通常以 /v1 结尾。</p>
+          </div>
+          <div class="field">
+            <label for="model">模型 ID <span class="required">必填</span></label>
+            <input id="model" name="model" type="text" maxlength="120" required placeholder="填写服务商提供的模型 ID" spellcheck="false" autocapitalize="none" autocorrect="off" aria-describedby="model-help">
+            <p class="field-help" id="model-help">模型须支持图像输入，请使用服务商提供的完整名称。</p>
+          </div>
+          <div class="field">
+            <label for="key">API Key</label>
+            <input id="key" name="api_key" type="password" autocomplete="off" placeholder="留空继续使用当前 Key" spellcheck="false" autocapitalize="none" autocorrect="off" aria-describedby="key-hint">
+            <p class="field-help" id="key-hint">正在读取当前配置…</p>
+          </div>
+          <div class="test-note">测试会发送一张程序自带的合成图，可能产生少量费用。</div>
+          <div class="form-actions"><button id="test" type="submit">测试连接</button><button id="save" class="secondary" type="button" disabled>保存并切换模型</button></div>
+          <p id="message" role="status" aria-live="polite" aria-atomic="true"></p>
+          <details class="default-settings"><summary>默认模型设置</summary><button id="reset" class="reset-button" type="button" disabled>恢复默认千问模型</button></details>
+        </form>
+      </section>
+      <aside class="config-guide" aria-labelledby="guide-title">
+        <h2 id="guide-title">配置步骤</h2>
+        <ol class="steps">
+          <li><span class="step-number" aria-hidden="true">一</span><div><h3>填写接口</h3><p>输入 API 地址、模型 ID 和对应的 Key。</p></div></li>
+          <li><span class="step-number" aria-hidden="true">二</span><div><h3>测试连接</h3><p>确认模型能够接收图像并返回描述。</p></div></li>
+          <li><span class="step-number" aria-hidden="true">三</span><div><h3>保存配置</h3><p>测试成功后保存，再返回工作台使用。</p></div></li>
+        </ol>
+        <div class="guide-note"><h3>更换服务商时</h3><p>API 地址与 Key 需属于同一服务商。更换地址后，请重新填写对应的 Key。</p></div>
+      </aside>
+    </div>
+    <footer class="page-footer">壁画智护 · 模型服务设置</footer>
+  </main>
+</body>
+</html>

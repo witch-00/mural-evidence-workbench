@@ -1,0 +1,87 @@
+:root {
+  --paper: #f4f0e8;
+  --surface: #fffcf6;
+  --ink: #352e28;
+  --muted: #75695e;
+  --accent: #963b37;
+  --line: #dcd0c2;
+  --song: "方正书宋简体", "FZShuSong-Z01S", "STSong", "华文宋体", "SimSun", "宋体", "Noto Serif CJK SC", serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 16px/1.7 var(--song); }
+button,input { font: inherit; }
+a { color: var(--accent); text-decoration: none; }
+button,a,summary { -webkit-tap-highlight-color: transparent; }
+button:focus-visible,a:focus-visible,summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+.page-header { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 16px max(28px, calc((100% - 1040px)/2)); border-block-end: 1px solid var(--line); background: #f9f5ef; }
+.brand { display: flex; align-items: center; gap: 12px; color: var(--ink); }
+.brand-name { font-size: 24px; letter-spacing: 3px; }
+.brand-name small { display: block; font-size: 8px; letter-spacing: 1.6px; color: var(--muted); }
+.brand-symbol { position: relative; display: block; flex: none; inline-size: 36px; block-size: 42px; background: #97433b; border-radius: 22px 22px 5px 5px; clip-path: polygon(0 0,100% 0,100% 65%,88% 72%,94% 84%,76% 100%,0 100%); }
+.brand-layer { position: absolute; inset: 6px 6px 0; background: #c4a274; border-radius: 18px 18px 0 0; }
+.brand-pigment { position: absolute; inset: 11px 11px 0; background: #8b4d40; border-radius: 13px 13px 0 0; }
+.brand-pigment::after { content: ""; position: absolute; inset: 17px -10px -2px 5px; background: #f9f5ef; clip-path: polygon(10% 0,28% 0,52% 35%,100% 48%,100% 66%,40% 52%); }
+.back-link { display: inline-flex; align-items: center; min-block-size: 44px; font-size: 14px; white-space: nowrap; }
+.back-link:hover { text-decoration: underline; text-underline-offset: 5px; }
+.config-page { max-inline-size: 1096px; padding: 28px; margin-inline: auto; }
+.page-title { margin-block-end: 24px; }
+.eyebrow { margin: 0 0 8px; color: var(--muted); font-size: 12px; }
+h1 { margin: 0; color: var(--accent); font-size: clamp(28px, 3vw, 36px); font-weight: 400; letter-spacing: 2px; line-height: 1.5; }
+.page-title > p:last-child { margin: 8px 0 0; color: var(--muted); font-size: 14px; }
+.config-layout { display: grid; grid-template-columns: minmax(0, 2fr) minmax(240px, 1fr); gap: 24px; align-items: start; }
+.config-card { padding: 24px 28px; background: var(--surface); border: 1px solid var(--line); border-block-start: 3px solid var(--accent); border-radius: 5px; min-inline-size: 0; }
+.card-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-block-end: 16px; margin-block-end: 20px; border-block-end: 1px solid var(--line); }
+h2 { font-size: 20px; font-weight: 400; margin: 0; }
+.card-heading > span { font-size: 12px; color: var(--muted); }
+.field { margin-block-end: 20px; }
+label { display: flex; align-items: baseline; gap: 9px; margin-block-end: 7px; font-size: 15px; }
+.required { color: #8e5d50; font-size: 11px; }
+input { inline-size: 100%; min-inline-size: 0; min-block-size: 50px; border: 1px solid #aa9783; border-radius: 4px; background: #fffefa; color: var(--ink); padding: 10px 13px; font-size: max(1rem, 1em); }
+input::placeholder { color: #8c8073; font-size: 14px; }
+input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-color: var(--accent); }
+input:user-invalid { border-color: #a13c33; }
+.field-help { color: var(--muted); font-size: 12px; margin: 6px 0 0; line-height: 1.7; }
+.test-note { border-inline-start: 2px solid #b86b58; padding-inline-start: 10px; color: #805e4e; font-size: 12px; margin: 2px 0 18px; }
+.form-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+button { min-inline-size: 0; min-block-size: 48px; padding: 10px 14px; border: 1px solid var(--accent); border-radius: 4px; background: var(--accent); color: #fffcf6; cursor: pointer; }
+button:hover:enabled { background: #7e2d29; border-color: #7e2d29; }
+button.secondary { background: #f3e3d8; color: #81372f; border-color: #b07861; }
+button.secondary:hover:enabled { background: #ead0bd; }
+button:disabled { background: #eee8df; color: #81746a; border-color: #d4c7b8; cursor: not-allowed; }
+#message { margin: 16px 0 0; padding: 11px 12px; background: #f5e8dd; border-inline-start: 3px solid var(--accent); color: #71392e; font-size: 14px; overflow-wrap: anywhere; }
+#message:empty { display: none; }
+.default-settings { margin-block-start: 22px; padding-block-start: 14px; border-block-start: 1px solid var(--line); }
+.default-settings summary { font-size: 13px; color: var(--muted); cursor: pointer; }
+.reset-button { inline-size: 100%; margin-block-start: 12px; background: transparent; color: var(--accent); font-size: 14px; }
+.config-guide { padding: 24px; border: 1px solid var(--line); background: #eee6da; border-radius: 5px; }
+.config-guide > h2 { color: #713a30; font-size: 18px; }
+.steps { list-style: none; padding: 0; margin: 24px 0; }
+.steps li { display: flex; align-items: start; gap: 12px; margin-block-end: 22px; }
+.steps li:last-child { margin-block-end: 0; }
+.step-number { flex: none; display: grid; place-items: center; inline-size: 28px; block-size: 28px; border: 1px solid #b9856e; color: #8b3c31; border-radius: 50%; font-size: 13px; }
+h3 { font-size: 15px; margin: 1px 0 6px; font-weight: 400; }
+.steps p,.guide-note p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.8; }
+.guide-note { border-block-start: 1px solid #d0beaa; padding-block-start: 16px; }
+.guide-note h3 { color: #794439; }
+.page-footer { margin-block-start: 26px; color: var(--muted); font-size: 11px; text-align: center; letter-spacing: 2px; }
+::selection { background: #e9c9b8; color: #5c2622; }
+@media (max-width: 760px) {
+  .page-header { padding: 12px 20px; }
+  .brand-name { font-size: 20px; }
+  .back-link { font-size: 13px; }
+  .config-page { padding: 24px 20px; }
+  .config-layout { grid-template-columns: minmax(0, 1fr); gap: 18px; }
+  .config-card { padding: 20px; }
+  .config-guide { padding: 20px; }
+  .steps { margin-block: 18px; }
+}
+@media (max-width: 420px) {
+  .page-header { padding-inline: 16px; gap: 12px; }
+  .brand-name { letter-spacing: 2px; }
+  .brand-name small { font-size: 7px; }
+  .config-page { padding-inline: 16px; }
+  .config-card { padding-inline: 16px; }
+  .card-heading { flex-wrap: wrap; }
+  .form-actions { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+}

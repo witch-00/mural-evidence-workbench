@@ -10,7 +10,9 @@ git -C "$BASE" apply "$PWD/integration/workbench.patch" &&
 cp static/region-evidence.js static/region-evidence.css static/workspace.js static/workspace.css static/repair-controls.js static/comparison-view.js "$BASE/static/" &&
 cp -R static/vendor "$BASE/static/" &&
 cp observation_card.py "$BASE/" &&
-cp static/fonts/MuralSerifSC-* "$BASE/static/fonts/"
+cp static/fonts/MuralSerifSC-* "$BASE/static/fonts/" &&
+cp model-config.html "$BASE/" &&
+cp static/model-config.css "$BASE/static/"
 ```
 
 使用原工作台配置的 Python 环境及依赖。在 BASE 目录运行 `python -m flask --app app run --host 127.0.0.1 --port 8766`，浏览器打开 http://localhost:8766 。实例只监听回环地址，适合同一台电脑轮流试用。模型凭据继续由原工作台的配置机制管理。替换 Python 文件后重启该实例。
@@ -20,6 +22,12 @@ cp static/fonts/MuralSerifSC-* "$BASE/static/fonts/"
 工作台导入框可选择 JPEG、PNG、WebP 图片或 JSON 工作文件。若要启用一键试用，将可供本机队员查看的练习工作文件放在工作副本的 `sample/evidence-trial.json`；首页会显示“打开试用工作文件”，也可直接访问 `/?trial=evidence`。
 
 导入新图片后，“图像与资料”保持展开，便于继续填写图片来源与授权、参考资料和背景说明。填写完成后可手动折叠。
+
+## API 配置与本机代理兼容
+
+`/model-config` 使用独立的朱红宋体样式，表单与说明分栏，窄屏改为单列。测试连接与保存继续使用原工作台的 `static/model-config.js` 和服务端凭证校验。
+
+如果本机的 TUN 代理将公开 API 域名解析为 198.18.0.0/15，需要额外应用 `integration/network-compat.patch`。先在原工作副本运行 `git apply --check`，再应用；启动时用 `MURAL_FAKE_IP_HOSTS=api.deepseek.com` 按实际需要列出精确域名。普通网络无需此项。该兼容只放行列明域名的代理地址池，仍拒绝私网目标，保留原主机名 TLS 验证与已检查地址绑定。此补丁包含对应的回归测试，不包含实际 Key 或已保存的配置。
 
 
 ## 界面与字体

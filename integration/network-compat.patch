@@ -1,0 +1,79 @@
+diff --git a/model_config.py b/model_config.py
+index 0c3ac76..1624373 100644
+--- a/model_config.py
++++ b/model_config.py
+@@ -93,7 +93,17 @@ def request_model(config, messages, max_tokens=250):
+     u = urllib.parse.urlsplit(config['base_url'])
+     try:
+         addresses = {item[4][0] for item in socket.getaddrinfo(u.hostname, 443, type=socket.SOCK_STREAM)}
+-        if not addresses or any(not ipaddress.ip_address(a).is_global for a in addresses):
++        # Local TUN proxies can resolve public domains into their 198.18/15 pool.
++        # Opt in by exact hostname; private/LAN destinations remain forbidden.
++        # TLS still verifies the original hostname and the checked IPs stay pinned.
++        fake_ip_hosts = {host.strip().lower() for host in
++                         os.environ.get('MURAL_FAKE_IP_HOSTS', '').split(',') if host.strip()}
++        fake_ip_allowed = (u.hostname or '').lower() in fake_ip_hosts
++        fake_ip_pool = ipaddress.ip_network('198.18.0.0/15')
++        def address_allowed(address):
++            ip = ipaddress.ip_address(address)
++            return ip.is_global or (fake_ip_allowed and ip in fake_ip_pool)
++        if not addresses or any(not address_allowed(a) for a in addresses):
+             raise ConfigError('API 地址必须解析为公网地址。')
+         body = {'model': config['model'], 'messages': messages, 'max_tokens': max_tokens}
+         host = (u.hostname or '').lower()
+diff --git a/tests/test_model_config.py b/tests/test_model_config.py
+index 547eaea..3b7fc00 100644
+--- a/tests/test_model_config.py
++++ b/tests/test_model_config.py
+@@ -1,7 +1,8 @@
+ import os
++import json
+ import tempfile
+ import unittest
+-from unittest.mock import patch
++from unittest.mock import MagicMock, patch
+ import model_config as mc
+ import app
+
+@@ -56,3 +57,41 @@ class ModelConfigurationTest(unittest.TestCase):
+             self.assertEqual(self.client.post('/api/model-config/test',json=self.payload).status_code,400)
+         self.assertEqual(self.client.post('/api/model-config/save',json={**self.payload,'ticket':'fake'}).status_code,400)
+         self.assertFalse(mc.path().exists())
++
++    def test_explicitly_trusted_fake_ip_keeps_the_checked_connection(self):
++        config = {'base_url':'https://api.deepseek.com/v1', 'model':'deepseek-flash', 'key':'test-key'}
++        addresses = [(0, 0, 0, '', ('198.18.0.204', 443))]
++        connection = MagicMock()
++        response = connection.getresponse.return_value
++        response.status = 200
++        response.read.return_value = json.dumps({'choices':[{'message':{'content':'图中有绿色。'}}]}).encode()
++        response.getheader.return_value = 'test-request'
++        with patch.dict(os.environ, {'MURAL_FAKE_IP_HOSTS':'api.deepseek.com'}), \
++             patch('model_config.socket.getaddrinfo', return_value=addresses), \
++             patch('model_config.http.client.HTTPSConnection', return_value=connection) as https:
++            result, request_id = mc.request_model(config, [])
++        self.assertEqual(request_id, 'test-request')
++        self.assertTrue(result['choices'][0]['message']['content'])
++        self.assertEqual(https.call_args.args, ('api.deepseek.com', 443))
++        self.assertEqual(connection.request.call_args.args[:2], ('POST', '/v1/chat/completions'))
++        with patch('model_config.socket.create_connection') as connect:
++            connection._create_connection(('ignored.example', 443), 7)
++        connect.assert_called_once_with(('198.18.0.204', 443), 7, None)
++
++    def test_fake_ip_opt_in_does_not_allow_private_or_untrusted_destinations(self):
++        cases = [
++            ('api.deepseek.com', '198.18.0.204', ''),
++            ('other.example', '198.18.0.204', 'api.deepseek.com'),
++            ('api.deepseek.com', '127.0.0.1', 'api.deepseek.com'),
++            ('api.deepseek.com', '10.0.0.1', 'api.deepseek.com'),
++            ('api.deepseek.com', '::1', 'api.deepseek.com'),
++            ('api.deepseek.com', '169.254.169.254', 'api.deepseek.com'),
++        ]
++        for host, address, trusted in cases:
++            with self.subTest(host=host, address=address, trusted=trusted), \
++                 patch.dict(os.environ, {'MURAL_FAKE_IP_HOSTS':trusted}), \
++                 patch('model_config.socket.getaddrinfo', return_value=[(0, 0, 0, '', (address, 443))]), \
++                 patch('model_config.http.client.HTTPSConnection') as https:
++                with self.assertRaises(mc.ConfigError):
++                    mc.request_model({'base_url':'https://'+host+'/v1', 'model':'test', 'key':'test-key'}, [])
++                https.assert_not_called()
