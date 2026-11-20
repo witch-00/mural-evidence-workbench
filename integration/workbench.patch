@@ -64,33 +64,127 @@ index b7f2385..3b42461 100644
 +        crop_strip(c, [(r['id']+' 原图局部', region_crop(image, r)) for r in regions], 502, 397)
      advice = '\n'.join(f"{r['target']}  /  {r['origin']}　{r['action']}\n"
 diff --git a/index.html b/index.html
-index 390acb6..65c34b6 100644
+index 390acb6..e465bc9 100644
 --- a/index.html
 +++ b/index.html
-@@ -6,2 +6,3 @@
+@@ -6,2 +6,4 @@
    <link rel="stylesheet" href="/static/style.css">
 +  <link rel="stylesheet" href="/static/region-evidence.css">
++  <link rel="stylesheet" href="/static/workspace.css">
  </head>
-@@ -31,4 +32,4 @@
+@@ -9,21 +11,16 @@
+ <div class="app-shell">
+-  <aside class="sidebar">
+-    <div class="brand"><div class="brand-mark">壁</div><div><strong>壁画智护</strong><span>MURAL CONSERVATION</span></div></div>
+-    <div class="sidebar-caption">工作流程 <span>WORKFLOW</span></div>
+-    <nav>
+-      <a href="#input"><i>01</i><span>图像与资料<small>导入 · 来源</small></span></a>
+-      <a href="#observe"><i>02</i><span>观察与复核<small>识别 · 编辑</small></span></a>
+-      <a href="#restore"><i>03</i><span>虚拟修复<small>涂抹 · 对照</small></span></a>
+-      <a href="#deliver"><i>04</i><span>成果导出<small>报告 · 记录</small></span></a>
++  <header class="sidebar">
++    <a class="brand" href="#input"><div class="brand-mark">壁</div><div><strong>壁画智护</strong><span>MURAL CONSERVATION</span></div></a>
++    <nav aria-label="工作区导航">
++      <a href="#input">图像与资料</a><a href="#observe">观察与复核</a><a href="#restore">虚拟修复</a><a href="#deliver">成果导出</a>
+     </nav>
+-    <div class="sidebar-note"><span class="note-icon">✳</span><b>保留原貌，谨慎推断</b><p>AI 提供观察线索，所有结论与处理区域均需人工复核。</p></div>
+-    <div class="sidebar-footer"><span class="status-dot" id="status-dot"></span><span id="model-status">正在检查模型配置…</span><button class="link-button" id="open-settings" type="button">设置</button></div>
+-  </aside>
++    <div class="header-actions"><a class="top-settings" href="/model-config" target="_blank" rel="noopener">API 配置 ↗</a><button class="top-settings" id="open-settings-top" type="button">模型设置</button></div>
++  </header>
+   <main class="main">
+     <div class="offline-bar" id="offline" hidden><b>与工作台服务的连接已断开</b><span>启动窗口被关闭、服务崩溃或端口被其它程序占用时会出现。重新运行「启动.bat」，再点右侧重试即可，页面上的工作内容不会丢。</span><button id="offline-retry" type="button">重新检测</button></div>
+-    <header class="topbar"><div class="crumb">数字文保 / <span>工作台</span></div><div class="top-right"><a class="top-settings" href="/model-config" target="_blank" rel="noopener">API 配置 ↗</a><button class="top-settings" id="open-settings-top" type="button">模型设置</button><span class="local-badge"><i></i> 本机工作区</span><span class="top-date">观察 · 理解 · 审慎处理</span></div></header>
+     <section class="intro" id="input">
+-      <div><div class="eyebrow"><span></span> 数字观察工作台</div><h1>让每一次修复，<br><em>都有迹可循。</em></h1><p>从图像观察到局部虚拟修复，在 AI 辅助与人工判断之间，保留证据、边界与余地。</p><div class="intro-tags"><span>原图观察</span><span>人工复核</span><span>范围锁定</span><span>单页报告</span></div></div>
+-      <div class="intro-stamp"><div class="stamp-orbit orbit-a"></div><div class="stamp-orbit orbit-b"></div><div class="stamp-center"><span class="stamp-glyph">观</span><small>OBSERVE</small></div><div class="stamp-caption">见微 · 知著</div></div>
++      <div><h1>从原图出发，逐处核对。</h1><p>观察细节、记录依据，保留每次人工判断。</p></div>
++      <div class="sidebar-footer"><span class="status-dot" id="status-dot"></span><span id="model-status">正在检查模型配置…</span><button class="link-button" id="open-settings" type="button">设置</button></div>
+     </section>
++    <details class="source-drawer" id="source-drawer" open><summary>图像与资料<span>导入图片、恢复工作进度及填写来源</span></summary>
+     <div class="section-title"><div><span class="section-num">01 / PREPARE</span><h2>从一张图像开始</h2><p>仅使用已获授权、允许发送至所选模型服务的图片和资料。</p></div></div>
+@@ -31,4 +28,4 @@
        <div class="panel upload-panel"><div class="panel-head"><div><span class="micro">IMAGE INPUT</span><h3>导入壁画图像</h3></div><span class="panel-index">01</span></div>
 -        <label class="dropzone" id="dropzone"><input id="file" type="file" accept="image/png,image/jpeg,image/webp" hidden><span class="upload-icon">↥</span><b id="file-name">点击选择或拖入图片</b><small>PNG / JPG / WEBP · 不超过 150 MB</small></label>
 -        <div class="upload-foot"><span>请确认图片来源与授权</span><button class="text-button" id="load-demo" type="button">使用合成示例 ↗</button></div><div class="project-actions"><button class="text-button" id="save-project" type="button">↓ 保存工作进度</button><label class="text-button project-load">↑ 恢复工作进度<input id="load-project" type="file" accept="application/json,.json" hidden></label></div>
 +        <label class="dropzone" id="dropzone"><input id="file" type="file" accept=".jpg,.jpeg,.png,.webp,.json,image/jpeg,image/png,image/webp,application/json" hidden><span class="upload-icon">↥</span><b id="file-name">选择图片或工作文件</b><small>图片：JPG / PNG / WebP · 工作进度：JSON</small></label>
 +        <div class="upload-foot"><span>请确认图片来源与授权</span><button class="text-button" id="load-demo" type="button">使用合成示例 ↗</button></div><div class="project-actions"><button type="button" class="text-button" id="open-trial" hidden>打开试用工作文件</button><button class="text-button" id="save-project" type="button">↓ 保存工作进度</button><label class="text-button project-load">↑ 恢复工作进度（JSON）<input id="load-project" type="file" accept="application/json,.json" hidden></label></div>
        </div>
-@@ -107,2 +108,3 @@
+@@ -40,2 +37,3 @@
+     </div>
++    </details>
+     <div class="section-title workspace-title" id="observe"><div><span class="section-num">02 / OBSERVE</span><h2>观察与人工复核</h2><p>每次点击仅调用一次模型，并替换当前标记和建议。<span id="call-provider"></span></p></div><button class="primary" id="analyze"><span>✦</span> AI 观察图像 <b>→</b></button></div>
+@@ -50,3 +48,8 @@
+       <div class="results-column">
+-        <div class="panel result-panel"><div class="result-heading"><div><span class="micro">HUMAN IN THE LOOP</span><h3>重点区域 <span id="region-count">0 / 3</span></h3></div><span class="step-pill">可编辑</span></div><p class="small-help">框选 1—3 处关注区域，点击局部图可按原图像素核对。</p><div id="regions" class="editable-list"><div class="empty-list">观察结果会出现在这里</div></div></div>
++        <div class="inspector-switch" role="group" aria-label="选择编辑内容">
++          <button type="button" id="show-regions" aria-pressed="true">区域观察</button>
++          <button type="button" id="show-advice" aria-pressed="false">保护建议</button>
++        </div>
++        <div class="inspector-scroll">
++        <div class="panel result-panel"><div class="result-heading"><div><span class="micro">HUMAN IN THE LOOP</span><h3>重点区域 <span id="region-count">0 / 3</span></h3></div><span class="step-pill">逐处核对</span></div><p class="small-help">框选 1—3 处关注区域，点击局部图可按原图像素核对。</p><div id="region-picker" role="group" aria-label="选择关注区域"></div><div id="regions" class="editable-list"><div class="empty-list">观察结果会出现在这里</div></div></div>
+         <div class="panel result-panel recommendation-panel"><div class="result-heading"><div><span class="micro">EVIDENCE & RISK</span><h3>建议、依据与风险</h3></div><button class="text-button" id="add-rec">＋ 添加</button></div><div id="recommendations" class="editable-list"><div class="empty-list">AI 生成后可逐条修改，也可手动添加。</div></div><label class="uncertainty-label">不确定性 / 人工复核 <span id="uncertainty-origin" class="origin-label"></span><textarea id="uncertainty" maxlength="160" rows="3" placeholder="指出仅凭图像无法判断的内容及需专家复核的事项。"></textarea></label></div>
+@@ -54,3 +57,4 @@
+     </div>
+-    <div class="section-title" id="restore"><div><span class="section-num">03 / VIRTUAL REPAIR</span><h2>按破损类型修复</h2><p>先判类型：大裂隙补表里再续纹样，小裂缝用仿制图章向内补；范围外像素保持不变。</p></div><button class="secondary" id="do-restore"><span>◈</span> 一键修复 <b>→</b></button></div>
++    </div>
++    <div class="section-title" id="restore"><div><span class="section-num">03 / VIRTUAL REPAIR</span><h2>局部虚拟修复</h2><p>涂抹目标范围，生成候选后逐处检查线条与纹样。</p></div><button class="secondary" id="do-restore"><span>◈</span> 生成修复候选 <b>→</b></button></div>
+     <div class="repair-card"><div class="repair-copy">
+@@ -58,3 +62,3 @@
+             <select id="repair-method">
+-              <option value="auto" selected>自动识别 · 一键修复（先判类型，再按类型补）</option>
++              <option value="auto" selected>自动处理 · 传统算法</option>
+               <option value="peel">大裂隙 · 先铺底层再续纹样（剥落专用）</option>
+@@ -65,3 +69,3 @@
+               <option value="telea">细小裂隙 · 邻域插值（合规）</option>
+-              <option value="ai">AI 智能修复 · LaMa（本地模型，随包可用）</option>
++              <option value="ai">LaMa · 局部结构补全</option>
+             </select>
+@@ -80,4 +84,5 @@
+           <p class="sample-result" id="sample-result" hidden></p>
+-          <div class="repair-stat" id="repair-stat" aria-live="polite">涂抹破损区后一键修复；未涂抹时自动查找细裂缝</div>
+-        </div><div class="compare-container" id="compare"><div class="compare-empty"><span>◩</span><b>修复前后对照</b><small>生成后可拖动滑块查看变化</small></div><div class="compare-inner" hidden><img id="after-img" alt="虚拟处理后"><div class="before-clip" id="before-clip"><img id="before-img" alt="原图"></div><div class="compare-line" id="compare-line"><span>↔</span></div><div class="compare-label left">原图</div><div class="compare-label right">虚拟示意</div><input id="compare-range" type="range" min="0" max="100" value="50" aria-label="比较原图与虚拟处理结果"></div></div></div>
++          <details class="repair-record"><summary>处理记录与像素校验</summary><div class="repair-stat" id="repair-stat" aria-live="polite">涂抹目标后生成修复候选</div></details>
++        </div><div class="comparison-area"><div class="compare-toolbar"><div role="group" aria-label="对照视野"><button type="button" id="compare-local" aria-pressed="true">处理局部</button><button type="button" id="compare-full" aria-pressed="false">完整画面</button></div><button type="button" id="compare-detail">放大核对 ↗</button></div><div class="compare-container" id="compare"><div class="compare-empty"><span>◩</span><b>修复前后对照</b><small>生成后可拖动滑块查看变化</small></div><div class="compare-inner" hidden><img id="after-img" alt="虚拟处理后"><div class="before-clip" id="before-clip"><img id="before-img" alt="原图"></div><div class="compare-line" id="compare-line"><span>↔</span></div><div class="compare-label left">原图</div><div class="compare-label right">虚拟示意</div><input id="compare-range" type="range" min="0" max="100" value="50" aria-label="比较原图与虚拟处理结果"></div></div></div>
++    </div>
+     <div class="panel repair-notes">
+@@ -93,5 +98,8 @@
+ </div>
+-<dialog id="detail-view" aria-labelledby="detail-title"><div class="detail-bar">
+-  <strong id="detail-title"></strong><button type="button" class="text-button" id="close-detail">关闭</button></div>
+-  <div class="detail-scroll"><canvas id="detail-canvas"></canvas></div><p id="detail-observation"></p></dialog>
++<dialog id="detail-view" aria-labelledby="detail-title" closedby="any">
++  <div class="detail-bar"><strong id="detail-title"></strong><button type="button" class="text-button" id="close-detail" autofocus>关闭 ×</button></div>
++  <div class="detail-content"><div class="detail-media"><div class="detail-scroll"><canvas id="detail-canvas" aria-label="原图裁片"></canvas></div>
++    <div class="detail-controls" role="group" aria-label="裁片缩放"><button type="button" id="detail-zoom-out" aria-label="缩小">−</button><button type="button" id="detail-fit">适应窗口</button><button type="button" id="detail-zoom-in" aria-label="放大">＋</button><span>滚轮缩放 · 拖动查看</span></div>
++  </div><div class="detail-notes"><p id="detail-observation"></p></div></div>
++</dialog>
+ <dialog id="settings-view" aria-labelledby="settings-title"><div class="detail-bar">
+@@ -107,3 +115,6 @@
  <div id="toast" role="status" aria-live="polite"></div>
++<script src="/static/vendor/panzoom/panzoom.min.js"></script>
 +<script src="/static/region-evidence.js"></script>
  <script src="/static/app.js"></script>
++<script src="/static/workspace.js"></script>
+ </body></html>
 diff --git a/static/app.js b/static/app.js
-index 809568f..4fcdcfc 100644
+index 809568f..96bda2b 100644
 --- a/static/app.js
 +++ b/static/app.js
 @@ -196,2 +196,3 @@ function checklistItems(){
      ['关注区域 1—3 个且均有说明',regionsOk],
 +    ['各区域已注明依据和复核决定（观察卡）',regionsOk && state.regions.every(hasEvidence)],
      ['建议 1—2 条，目标、依据、风险完整',adviceOk],
-@@ -330,5 +331,10 @@ async function loadImage(file,isDemo=false){
+@@ -316,3 +317,3 @@ async function loadImage(file,isDemo=false){
+     refreshTint();setMode('box');updateUndoButton();
+-    $('repair-method').value='auto';updateMethodHelp();
++    $('repair-method').value=preferredRepairMethod();updateMethodHelp();
+     for(const id of ['repair-basis','repair-review','other-tools'])$(id).value='';
+@@ -323,2 +324,3 @@ async function loadImage(file,isDemo=false){
+     else {$('source').value='';$('references').value='';$('context').value=''}
++    $('source-drawer').open=false;
+     const megapixels=image.naturalWidth*image.naturalHeight/1e6;
+@@ -330,5 +332,10 @@ async function loadImage(file,isDemo=false){
  }
 -$('file').addEventListener('change',e=>{loadImage(e.target.files[0]);e.target.value=''});
 +function importFile(file) {
@@ -103,9 +197,10 @@ index 809568f..4fcdcfc 100644
 -const drop=$('dropzone');['dragenter','dragover'].forEach(n=>drop.addEventListener(n,e=>{e.preventDefault();drop.classList.add('drag')}));['dragleave','drop'].forEach(n=>drop.addEventListener(n,e=>{e.preventDefault();drop.classList.remove('drag')}));drop.addEventListener('drop',e=>loadImage(e.dataTransfer.files[0]));
 +const drop=$('dropzone');['dragenter','dragover'].forEach(n=>drop.addEventListener(n,e=>{e.preventDefault();drop.classList.add('drag')}));['dragleave','drop'].forEach(n=>drop.addEventListener(n,e=>{e.preventDefault();drop.classList.remove('drag')}));drop.addEventListener('drop',e=>importFile(e.dataTransfer.files[0]));
  function setMode(mode, redrawId=null) {
-@@ -892,3 +898,11 @@ function regionThumb(row) {
+@@ -892,4 +899,12 @@ function regionThumb(row) {
      $('detail-title').textContent=row.id+' 原图细节 · '+w+' × '+h+' 像素';
 -    $('detail-observation').textContent=row.observation;
+-    $('detail-view').showModal();
 +    const e = row.evidence || {};
 +    const lines = [row.observation];
 +    const initial = initialRow(row,'regions');
@@ -115,12 +210,21 @@ index 809568f..4fcdcfc 100644
 +      if(e[key]) lines.push(label+'　'+e[key]);
 +    }
 +    $('detail-observation').textContent=lines.join('\n');
-     $('detail-view').showModal();
-@@ -935,2 +949,3 @@ function renderLists() {
++    openDetail();
+   };
+@@ -923,2 +938,3 @@ function renderLists() {
+     const {card,actions,updateOrigin}=editCard(r,'regions',r.id+' 关注区域');
++    card.dataset.region=r.id;
+     const redraw=document.createElement('button');redraw.className='text-button';redraw.textContent='重画框';
+@@ -935,2 +951,3 @@ function renderLists() {
      const draft=draftDetails(r,'regions');if(draft)card.append(draft);
 +    card.append(evidenceEditor(r));
      regions.append(card);
-@@ -984,6 +999,8 @@ function applyObservation(result,inputSnapshot) {
+@@ -958,2 +975,3 @@ function renderLists() {
+   });
++  if(typeof updateInspector==='function')updateInspector();
+   renderChecklist();
+@@ -984,6 +1002,8 @@ function applyObservation(result,inputSnapshot) {
  }
 -$('analyze').onclick=async()=>{if(!state.imageData)return notify('请先导入图片。',true);if(!$('source').value.trim())return notify('请先填写图片来源和授权。',true);let btn=$('analyze');setBusy(btn,true,'模型正在观察，请稍候…');try{
 +$('analyze').onclick=async()=>{if(!state.imageData)return notify('请先导入图片。',true);if(!$('source').value.trim())return notify('请先填写图片来源和授权。',true);if(state.regions.some(row=>Object.values(row.evidence || {}).some(Boolean)) && !confirm('重新观察会替换当前区域及其复核记录。继续前请保存需要保留的工作进度。'))return;let btn=$('analyze');setBusy(btn,true,'模型正在观察，请稍候…');try{
@@ -130,35 +234,59 @@ index 809568f..4fcdcfc 100644
    if(state.loadTicket!==ticket || state.imageData!==imageAtRequest || $('source').value!==inputSnapshot.source || $('references').value!==inputSnapshot.references || $('context').value!==inputSnapshot.context) throw new Error('请求期间图片或资料已变化，本次结果未应用；请核对后再观察。');
 +  if(JSON.stringify(currentReview())!==reviewBeforeRequest)throw new Error('等待期间复核内容已变动，已保留你的编辑。');
    applyObservation(result,inputSnapshot);notify('模型观察已完成，请按编号核对原图局部与建议。');
-@@ -1148,3 +1165,4 @@ function currentReview() {
+@@ -991,2 +1011,5 @@ $('analyze').onclick=async()=>{if(!state.imageData)return notify('请先导入
+ function maskData(){let out=document.createElement('canvas');out.width=mask.width;out.height=mask.height;let c=out.getContext('2d');c.fillStyle='black';c.fillRect(0,0,out.width,out.height);c.drawImage(mask,0,0);return out.toDataURL('image/png')}
++function preferredRepairMethod() {
++  return state.aiModel?.installed && state.aiAllowed!==false && !state.onsite ? 'ai' : 'auto';
++}
+ function updateMethodHelp() {
+@@ -997,3 +1020,3 @@ function updateMethodHelp() {
+   const notes={
+-    auto:'涂抹破损区后点“一键修复”：宽而浅的区域按剥落处理，先补完地子，再沿周边纹样续接花纹；细长裂缝按仿制图章从边缘向内补，不做涂抹过渡，也不堆叠逐层合成。不涂抹时自动查找细裂缝。',
++    auto:'传统邻域算法按区域形状处理。建议先涂抹小范围检查；跨越纹样和边框的缺损可尝试 LaMa，重复纹样可选择同图取样。',
+     hybrid:'全程在本机跑：先用随包的 LaMa 把缺口的结构补顺，再用块匹配把笔触颗粒接回周围纹样。首次加载模型约十几秒，之后两秒上下，不联网、不花钱。',
+@@ -1002,3 +1025,3 @@ function updateMethodHelp() {
+     texture:'沿破损涂抹：比对周边原纹样，按笔触颗粒逐块拼合，颜色向邻近的青绿/赭红收敛；掩膜外像素保持不变。',
+-    ai:'沿缺损涂抹，AI 在原分辨率下按周边纹样补全；掩膜外像素保持不变。生成约需 2—5 秒。',
++    ai:'在原图涂抹缺损，LaMa 根据周围线条与色块生成局部候选。首次运行需要加载模型；生成后放大检查交界与纹样。',
+     telea:'沿细小缺损涂抹，按周边颜色和线条做插值，速度快但纹理细节较弱。',
+@@ -1050,2 +1073,3 @@ async function showComparison() {
+   // same divider, just enlarged.
++  if(state.compareWhole)return;
+   const box=state.repairMeta&&state.repairMeta.target_box;
+@@ -1148,3 +1172,4 @@ function currentReview() {
    return {source:$('source').value,references:$('references').value,context:$('context').value,
 -    regions:state.regions.map(r=>({...r,origin:originOf(r,'regions')})),
 +    evidence_version:1,
 +    regions:state.regions.map(r=>({...r,origin:originOf(r,'regions'),ai_observation:initialRow(r,'regions')?.observation || ''})),
      recommendations:state.recommendations.map(r=>({...r,origin:originOf(r,'recommendations')})),
-@@ -1227,3 +1245,3 @@ $('save-project').onclick=()=>{
+@@ -1227,3 +1252,3 @@ $('save-project').onclick=()=>{
    eventRecord('保存工作进度');
 -  const project={...currentReview(),version:2,notice:'工作文件含图片、资料与模型输出，请妥善保存。',
 +  const project={...currentReview(),version:3,notice:'工作文件含图片、资料与模型输出，请妥善保存。',
      image:state.imageData,mask:state.hasMask?mask.toDataURL('image/png'):null,restored:state.restored,
-@@ -1264,3 +1282,3 @@ function projectRegions(project) {
+@@ -1264,3 +1289,3 @@ function projectRegions(project) {
      used.add(id);
 -    return {...box,id,observation:String(row.observation||'').slice(0,100),ai_index:row.ai_index,
 +    return {...box,id,evidence:readEvidence(row.evidence),observation:String(row.observation||'').slice(0,100),ai_index:row.ai_index,
              legacy_origin:project.version===1?!!project.model:!!row.legacy_origin};
-@@ -1276,3 +1294,5 @@ function projectAdvice(project,regions) {
+@@ -1276,3 +1301,5 @@ function projectAdvice(project,regions) {
  $('load-project').addEventListener('change',async e=>{
 -  const file=e.target.files[0];e.target.value='';if(!file)return;
 +  const file=e.target.files[0];e.target.value='';if(file) await restoreProject(file);
 +});
 +async function restoreProject(file) {
    if(state.dirty && !confirm('当前工作尚未保存，恢复进度会覆盖现有内容。是否继续？'))return;
-@@ -1282,3 +1302,3 @@ $('load-project').addEventListener('change',async e=>{
+@@ -1282,3 +1309,3 @@ $('load-project').addEventListener('change',async e=>{
      const p=JSON.parse(await file.text());
 -    if(![1,2].includes(p.version) || !Array.isArray(p.regions) || p.regions.length>3 ||
 +    if(![1,2,3].includes(p.version) || !Array.isArray(p.regions) || p.regions.length>3 ||
         !Array.isArray(p.recommendations) || p.recommendations.length>2)throw new Error('工作文件格式无效。');
-@@ -1325,4 +1345,23 @@ $('load-project').addEventListener('change',async e=>{
+@@ -1316,2 +1343,3 @@ $('load-project').addEventListener('change',async e=>{
+     $('reviewed').checked=false;$('file-name').textContent='已恢复工作进度';
++    $('source-drawer').open=false;
+     $('dimensions').textContent=im.width+' × '+im.height;$('canvas-empty').hidden=true;cvs.style.display='block';
+@@ -1325,4 +1353,23 @@ $('load-project').addEventListener('change',async e=>{
      notify(p.version===1?'已恢复旧版进度。导出前请补选建议对应区域或填写修复依据。':'工作进度已恢复，请重新复核后导出。');
 +    return true;
    } catch(err){notify(err.message||'工作文件无法读取。',true)}
