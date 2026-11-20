@@ -64,7 +64,7 @@ index b7f2385..3b42461 100644
 +        crop_strip(c, [(r['id']+' 原图局部', region_crop(image, r)) for r in regions], 502, 397)
      advice = '\n'.join(f"{r['target']}  /  {r['origin']}　{r['action']}\n"
 diff --git a/index.html b/index.html
-index 390acb6..e465bc9 100644
+index 390acb6..371d1be 100644
 --- a/index.html
 +++ b/index.html
 @@ -6,2 +6,4 @@
@@ -98,7 +98,7 @@ index 390acb6..e465bc9 100644
      <section class="intro" id="input">
 -      <div><div class="eyebrow"><span></span> 数字观察工作台</div><h1>让每一次修复，<br><em>都有迹可循。</em></h1><p>从图像观察到局部虚拟修复，在 AI 辅助与人工判断之间，保留证据、边界与余地。</p><div class="intro-tags"><span>原图观察</span><span>人工复核</span><span>范围锁定</span><span>单页报告</span></div></div>
 -      <div class="intro-stamp"><div class="stamp-orbit orbit-a"></div><div class="stamp-orbit orbit-b"></div><div class="stamp-center"><span class="stamp-glyph">观</span><small>OBSERVE</small></div><div class="stamp-caption">见微 · 知著</div></div>
-+      <div><h1>从原图出发，逐处核对。</h1><p>观察细节、记录依据，保留每次人工判断。</p></div>
++      <div><h1>壁上千秋色，皆可寻其源。</h1><p>观察细节、记录依据，保留每次人工判断。</p></div>
 +      <div class="sidebar-footer"><span class="status-dot" id="status-dot"></span><span id="model-status">正在检查模型配置…</span><button class="link-button" id="open-settings" type="button">设置</button></div>
      </section>
 +    <details class="source-drawer" id="source-drawer" open><summary>图像与资料<span>导入图片、恢复工作进度及填写来源</span></summary>
@@ -168,7 +168,7 @@ index 390acb6..e465bc9 100644
 +<script src="/static/workspace.js"></script>
  </body></html>
 diff --git a/static/app.js b/static/app.js
-index 809568f..96bda2b 100644
+index 809568f..3e45fd7 100644
 --- a/static/app.js
 +++ b/static/app.js
 @@ -196,2 +196,3 @@ function checklistItems(){
@@ -197,7 +197,42 @@ index 809568f..96bda2b 100644
 -const drop=$('dropzone');['dragenter','dragover'].forEach(n=>drop.addEventListener(n,e=>{e.preventDefault();drop.classList.add('drag')}));['dragleave','drop'].forEach(n=>drop.addEventListener(n,e=>{e.preventDefault();drop.classList.remove('drag')}));drop.addEventListener('drop',e=>loadImage(e.dataTransfer.files[0]));
 +const drop=$('dropzone');['dragenter','dragover'].forEach(n=>drop.addEventListener(n,e=>{e.preventDefault();drop.classList.add('drag')}));['dragleave','drop'].forEach(n=>drop.addEventListener(n,e=>{e.preventDefault();drop.classList.remove('drag')}));drop.addEventListener('drop',e=>importFile(e.dataTransfer.files[0]));
  function setMode(mode, redrawId=null) {
-@@ -892,4 +899,12 @@ function regionThumb(row) {
+@@ -882,8 +889,30 @@ function regionThumb(row) {
+   const h=Math.max(1,Math.min(cvs.height,Math.ceil((row.y+row.h)*cvs.height))-sy);
+-  const scale=Math.min(360/w,160/h,1), thumb=document.createElement('canvas');
+-  thumb.width=Math.max(1,Math.round(w*scale));thumb.height=Math.max(1,Math.round(h*scale));
+-  thumb.className='region-thumb';thumb.setAttribute('aria-label',row.id+' 原图局部');
+-  thumb.getContext('2d').drawImage(state.image,sx,sy,w,h,0,0,thumb.width,thumb.height);
++  // Include the surroundings in the locator, while the dialog keeps the exact crop.
++  const ratio=2.3;
++  let viewWidth=Math.min(cvs.width,Math.max(w*1.2,h*1.2*ratio));
++  let viewHeight=Math.min(cvs.height,viewWidth/ratio);
++  if(viewHeight<h) {
++    viewHeight=Math.min(cvs.height,h*1.2);
++    viewWidth=Math.min(cvs.width,viewHeight*ratio);
++  }
++  const left=Math.max(0,Math.min(cvs.width-viewWidth,sx+w/2-viewWidth/2));
++  const top=Math.max(0,Math.min(cvs.height-viewHeight,sy+h/2-viewHeight/2));
++  const thumb=document.createElement('canvas');
++  thumb.width=720;thumb.height=Math.max(1,Math.round(720*viewHeight/viewWidth));
++  thumb.className='region-thumb';thumb.setAttribute('aria-label',row.id+' 原图定位与周围纹样');
++  const g=thumb.getContext('2d'),scale=thumb.width/viewWidth;
++  g.drawImage(state.image,left,top,viewWidth,viewHeight,0,0,thumb.width,thumb.height);
++  const bx=(sx-left)*scale,by=(sy-top)*scale,bw=w*scale,bh=h*scale;
++  g.fillStyle='rgba(30,25,18,.2)';
++  g.fillRect(0,0,thumb.width,by);
++  g.fillRect(0,by+bh,thumb.width,thumb.height-by-bh);
++  g.fillRect(0,by,bx,bh);
++  g.fillRect(bx+bw,by,thumb.width-bx-bw,bh);
++  g.strokeStyle='#ffe0a0';g.lineWidth=3;g.strokeRect(bx,by,bw,bh);
+   const button=document.createElement('button');button.className='detail-button';
+   button.setAttribute('aria-label','查看 '+row.id+' 原图细节');button.append(thumb);
++  const caption=document.createElement('span');caption.className='thumb-caption';
++  const location=document.createElement('span');location.textContent=row.id+' 原图定位';
++  const action=document.createElement('span');action.textContent='查看裁片 ↗';
++  caption.append(location,action);button.append(caption);
+   button.onclick=()=>{
+@@ -892,4 +921,12 @@ function regionThumb(row) {
      $('detail-title').textContent=row.id+' 原图细节 · '+w+' × '+h+' 像素';
 -    $('detail-observation').textContent=row.observation;
 -    $('detail-view').showModal();
@@ -212,19 +247,19 @@ index 809568f..96bda2b 100644
 +    $('detail-observation').textContent=lines.join('\n');
 +    openDetail();
    };
-@@ -923,2 +938,3 @@ function renderLists() {
+@@ -923,2 +960,3 @@ function renderLists() {
      const {card,actions,updateOrigin}=editCard(r,'regions',r.id+' 关注区域');
 +    card.dataset.region=r.id;
      const redraw=document.createElement('button');redraw.className='text-button';redraw.textContent='重画框';
-@@ -935,2 +951,3 @@ function renderLists() {
+@@ -935,2 +973,3 @@ function renderLists() {
      const draft=draftDetails(r,'regions');if(draft)card.append(draft);
 +    card.append(evidenceEditor(r));
      regions.append(card);
-@@ -958,2 +975,3 @@ function renderLists() {
+@@ -958,2 +997,3 @@ function renderLists() {
    });
 +  if(typeof updateInspector==='function')updateInspector();
    renderChecklist();
-@@ -984,6 +1002,8 @@ function applyObservation(result,inputSnapshot) {
+@@ -984,6 +1024,8 @@ function applyObservation(result,inputSnapshot) {
  }
 -$('analyze').onclick=async()=>{if(!state.imageData)return notify('请先导入图片。',true);if(!$('source').value.trim())return notify('请先填写图片来源和授权。',true);let btn=$('analyze');setBusy(btn,true,'模型正在观察，请稍候…');try{
 +$('analyze').onclick=async()=>{if(!state.imageData)return notify('请先导入图片。',true);if(!$('source').value.trim())return notify('请先填写图片来源和授权。',true);if(state.regions.some(row=>Object.values(row.evidence || {}).some(Boolean)) && !confirm('重新观察会替换当前区域及其复核记录。继续前请保存需要保留的工作进度。'))return;let btn=$('analyze');setBusy(btn,true,'模型正在观察，请稍候…');try{
@@ -234,59 +269,59 @@ index 809568f..96bda2b 100644
    if(state.loadTicket!==ticket || state.imageData!==imageAtRequest || $('source').value!==inputSnapshot.source || $('references').value!==inputSnapshot.references || $('context').value!==inputSnapshot.context) throw new Error('请求期间图片或资料已变化，本次结果未应用；请核对后再观察。');
 +  if(JSON.stringify(currentReview())!==reviewBeforeRequest)throw new Error('等待期间复核内容已变动，已保留你的编辑。');
    applyObservation(result,inputSnapshot);notify('模型观察已完成，请按编号核对原图局部与建议。');
-@@ -991,2 +1011,5 @@ $('analyze').onclick=async()=>{if(!state.imageData)return notify('请先导入
+@@ -991,2 +1033,5 @@ $('analyze').onclick=async()=>{if(!state.imageData)return notify('请先导入
  function maskData(){let out=document.createElement('canvas');out.width=mask.width;out.height=mask.height;let c=out.getContext('2d');c.fillStyle='black';c.fillRect(0,0,out.width,out.height);c.drawImage(mask,0,0);return out.toDataURL('image/png')}
 +function preferredRepairMethod() {
 +  return state.aiModel?.installed && state.aiAllowed!==false && !state.onsite ? 'ai' : 'auto';
 +}
  function updateMethodHelp() {
-@@ -997,3 +1020,3 @@ function updateMethodHelp() {
+@@ -997,3 +1042,3 @@ function updateMethodHelp() {
    const notes={
 -    auto:'涂抹破损区后点“一键修复”：宽而浅的区域按剥落处理，先补完地子，再沿周边纹样续接花纹；细长裂缝按仿制图章从边缘向内补，不做涂抹过渡，也不堆叠逐层合成。不涂抹时自动查找细裂缝。',
 +    auto:'传统邻域算法按区域形状处理。建议先涂抹小范围检查；跨越纹样和边框的缺损可尝试 LaMa，重复纹样可选择同图取样。',
      hybrid:'全程在本机跑：先用随包的 LaMa 把缺口的结构补顺，再用块匹配把笔触颗粒接回周围纹样。首次加载模型约十几秒，之后两秒上下，不联网、不花钱。',
-@@ -1002,3 +1025,3 @@ function updateMethodHelp() {
+@@ -1002,3 +1047,3 @@ function updateMethodHelp() {
      texture:'沿破损涂抹：比对周边原纹样，按笔触颗粒逐块拼合，颜色向邻近的青绿/赭红收敛；掩膜外像素保持不变。',
 -    ai:'沿缺损涂抹，AI 在原分辨率下按周边纹样补全；掩膜外像素保持不变。生成约需 2—5 秒。',
 +    ai:'在原图涂抹缺损，LaMa 根据周围线条与色块生成局部候选。首次运行需要加载模型；生成后放大检查交界与纹样。',
      telea:'沿细小缺损涂抹，按周边颜色和线条做插值，速度快但纹理细节较弱。',
-@@ -1050,2 +1073,3 @@ async function showComparison() {
+@@ -1050,2 +1095,3 @@ async function showComparison() {
    // same divider, just enlarged.
 +  if(state.compareWhole)return;
    const box=state.repairMeta&&state.repairMeta.target_box;
-@@ -1148,3 +1172,4 @@ function currentReview() {
+@@ -1148,3 +1194,4 @@ function currentReview() {
    return {source:$('source').value,references:$('references').value,context:$('context').value,
 -    regions:state.regions.map(r=>({...r,origin:originOf(r,'regions')})),
 +    evidence_version:1,
 +    regions:state.regions.map(r=>({...r,origin:originOf(r,'regions'),ai_observation:initialRow(r,'regions')?.observation || ''})),
      recommendations:state.recommendations.map(r=>({...r,origin:originOf(r,'recommendations')})),
-@@ -1227,3 +1252,3 @@ $('save-project').onclick=()=>{
+@@ -1227,3 +1274,3 @@ $('save-project').onclick=()=>{
    eventRecord('保存工作进度');
 -  const project={...currentReview(),version:2,notice:'工作文件含图片、资料与模型输出，请妥善保存。',
 +  const project={...currentReview(),version:3,notice:'工作文件含图片、资料与模型输出，请妥善保存。',
      image:state.imageData,mask:state.hasMask?mask.toDataURL('image/png'):null,restored:state.restored,
-@@ -1264,3 +1289,3 @@ function projectRegions(project) {
+@@ -1264,3 +1311,3 @@ function projectRegions(project) {
      used.add(id);
 -    return {...box,id,observation:String(row.observation||'').slice(0,100),ai_index:row.ai_index,
 +    return {...box,id,evidence:readEvidence(row.evidence),observation:String(row.observation||'').slice(0,100),ai_index:row.ai_index,
              legacy_origin:project.version===1?!!project.model:!!row.legacy_origin};
-@@ -1276,3 +1301,5 @@ function projectAdvice(project,regions) {
+@@ -1276,3 +1323,5 @@ function projectAdvice(project,regions) {
  $('load-project').addEventListener('change',async e=>{
 -  const file=e.target.files[0];e.target.value='';if(!file)return;
 +  const file=e.target.files[0];e.target.value='';if(file) await restoreProject(file);
 +});
 +async function restoreProject(file) {
    if(state.dirty && !confirm('当前工作尚未保存，恢复进度会覆盖现有内容。是否继续？'))return;
-@@ -1282,3 +1309,3 @@ $('load-project').addEventListener('change',async e=>{
+@@ -1282,3 +1331,3 @@ $('load-project').addEventListener('change',async e=>{
      const p=JSON.parse(await file.text());
 -    if(![1,2].includes(p.version) || !Array.isArray(p.regions) || p.regions.length>3 ||
 +    if(![1,2,3].includes(p.version) || !Array.isArray(p.regions) || p.regions.length>3 ||
         !Array.isArray(p.recommendations) || p.recommendations.length>2)throw new Error('工作文件格式无效。');
-@@ -1316,2 +1343,3 @@ $('load-project').addEventListener('change',async e=>{
+@@ -1316,2 +1365,3 @@ $('load-project').addEventListener('change',async e=>{
      $('reviewed').checked=false;$('file-name').textContent='已恢复工作进度';
 +    $('source-drawer').open=false;
      $('dimensions').textContent=im.width+' × '+im.height;$('canvas-empty').hidden=true;cvs.style.display='block';
-@@ -1325,4 +1353,23 @@ $('load-project').addEventListener('change',async e=>{
+@@ -1325,4 +1375,23 @@ $('load-project').addEventListener('change',async e=>{
      notify(p.version===1?'已恢复旧版进度。导出前请补选建议对应区域或填写修复依据。':'工作进度已恢复，请重新复核后导出。');
 +    return true;
    } catch(err){notify(err.message||'工作文件无法读取。',true)}

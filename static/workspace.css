@@ -279,3 +279,8 @@ input:not([type=range]):not([type=checkbox]),textarea,select { font-size: 15px; 
   input:not([type=range]):not([type=checkbox]),textarea,select { font-size: 16px; }
   .section-title h2 { font-size: 27px; }
 }
+
+.detail-button { display: block; border: 1px solid var(--line); border-radius: 5px; margin-block: 10px; text-align: start; }
+.detail-button .region-thumb { display: block; inline-size: 100%; block-size: auto; margin: 0; border-radius: 4px 4px 0 0; }
+.thumb-caption { display: flex; justify-content: space-between; gap: 12px; padding: 6px 10px; background: #f2e9dc; color: #79664c; font-size: 11px; }
+.thumb-caption span:last-child { color: var(--accent); }
