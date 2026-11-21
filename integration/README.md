@@ -7,9 +7,10 @@
 ```bash
 git -C "$BASE" apply --check "$PWD/integration/workbench.patch" &&
 git -C "$BASE" apply "$PWD/integration/workbench.patch" &&
-cp static/region-evidence.js static/region-evidence.css static/workspace.js static/workspace.css static/repair-controls.js static/comparison-view.js "$BASE/static/" &&
+cp static/region-evidence.js static/region-evidence.css static/workspace.js static/workspace.css static/repair-controls.js static/comparison-view.js static/case-library.js static/advice-sources.js static/library.css "$BASE/static/" &&
 cp -R static/vendor "$BASE/static/" &&
-cp observation_card.py "$BASE/" &&
+cp observation_card.py case_store.py case_api.py recommendation_sources.py "$BASE/" &&
+cp -R references "$BASE/" &&
 cp static/fonts/MuralSerifSC-* "$BASE/static/fonts/" &&
 cp model-config.html "$BASE/" &&
 cp static/model-config.css "$BASE/static/"
@@ -22,6 +23,20 @@ cp static/model-config.css "$BASE/static/"
 工作台导入框可选择 JPEG、PNG、WebP 图片或 JSON 工作文件。若要启用一键试用，将可供本机队员查看的练习工作文件放在工作副本的 `sample/evidence-trial.json`；首页会显示“打开试用工作文件”，也可直接访问 `/?trial=evidence`。
 
 导入新图片后，“图像与资料”保持展开，便于继续填写图片来源与授权、参考资料和背景说明。填写完成后可手动折叠。
+
+## SQLite 工作档案
+
+主页“保存到档案／打开档案”使用实际 SQLite 存储。编辑后会延迟自动保存并显示状态；普通主页可以恢复上次打开的档案，带 `trial` 的网址仍明确载入示例。打开历史版本会创建编辑副本；不同页面写同一版本返回冲突，可另存副本或重新打开，保留各自内容。
+
+默认存储在 BASE/data/case-library/workbench.sqlite3，图像以 SHA-256 命名放在同目录 assets/；设置 MURAL_DATA_DIR 可以换到其他持久目录。数据库和 assets 共同构成档案库，不能只复制数据库作为完整图像备份。需要直接备份整个目录时先停止服务；单份档案也可导出 JSON 工作文件。数据库目录保持私有并已排除在 Git 之外。此版本没有删除档案的入口。
+
+SQLite 表记录案例、不可变版本、去重图像索引和逐条引用快照。保存失败回滚数据库事务，页面保留编辑并允许导出工作文件。恢复图像时检查指纹。使用标准库 sqlite3，无新增数据库服务或 ORM 依赖。
+
+## 有出处的建议
+
+“建议与文献”面板中，每条建议可打开“从权威文献选择建议”，在保护、数字展示、公众传播三类中选择。当前目录包含两部已核对全文的 Getty 专业图书、ICOMOS 2003/2008 准则、中国文物古迹保护准则2015版与 London Charter 2.1，共6个来源、6条模板。
+
+模板提供行动、文献原则和风险，本图依据单独填写。正式卡保留1–2条。新格式导出要求行动、风险和引用仍与已核对模板相符，防止把任意改写内容套上书目编号。PDF 的建议表含引用编号与定位，来源区列书目和可点击全文。详见 [逐条来源核对](../docs/research/recommendation-sources-2026-11-21.md)。
 
 ## API 配置与本机代理兼容
 

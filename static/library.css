@@ -1,0 +1,48 @@
+.case-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; padding: 12px 16px; margin-block-end: 16px; border: 1px solid var(--line); background: var(--surface); border-radius: 5px; }
+.case-toolbar label { display: flex; align-items: center; gap: 10px; margin: 0; color: var(--muted); font-size: 13px; }
+.case-toolbar input { max-inline-size: 240px; padding: 7px 10px; }
+.case-toolbar button,.reference-choose { padding: 8px 12px; min-block-size: 42px; border: 1px solid #b5836d; background: #f8eee2; color: #843d32; border-radius: 4px; font: inherit; cursor: pointer; }
+#case-save-status { font-size: 12px; color: #776555; margin-inline-start: auto; }
+#case-save-status[data-error=true] { color: #a03b30; }
+#case-library,#advice-library { inline-size: min(920px,calc(100% - 24px)); max-inline-size: none; max-block-size: 90dvh; padding: 0; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); font-family: var(--font-book); }
+#case-library:modal,#advice-library:modal { overscroll-behavior: contain; }
+#case-library::backdrop,#advice-library::backdrop { background: #30251b80; overflow: hidden; overscroll-behavior: contain; }
+.library-header { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 16px 20px; border-block-end: 1px solid var(--line); }
+.library-header h2 { font: 22px var(--font-book); margin: 0; }
+.library-header button { font: inherit; background: transparent; color: var(--accent); border: 1px solid var(--line); border-radius: 4px; padding: 8px 12px; min-block-size: 44px; cursor: pointer; }
+.case-library-body { display: grid; grid-template-columns: minmax(200px,1fr) minmax(0,1.7fr); max-block-size: calc(90dvh - 86px); overflow: auto; }
+#case-list { padding: 16px; border-inline-end: 1px solid var(--line); }
+#case-history { padding: 16px 20px; min-inline-size: 0; }
+#case-history h3 { overflow-wrap: anywhere; margin: 0 0 12px; font: 20px var(--font-book); }
+.case-entry { display: block; inline-size: 100%; text-align: start; margin-block-end: 10px; padding: 12px; border: 1px solid var(--line); background: #f7efe3; color: var(--ink); border-radius: 4px; cursor: pointer; font: inherit; }
+.case-entry strong,.case-entry span { display: block; overflow-wrap: anywhere; }
+.case-entry span,.case-help { color: var(--muted); font-size: 12px; }
+.case-version { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; padding-block: 10px; border-block-end: 1px solid var(--line); font-size: 13px; }
+#case-history button,.template-card > button { font: inherit; padding: 8px 12px; border: 1px solid #b5836d; color: #843d32; background: #f8eee2; border-radius: 4px; min-block-size: 42px; cursor: pointer; }
+.advice-library-body { max-block-size: calc(90dvh - 82px); overflow: auto; padding: 18px 20px; }
+.advice-categories { display: flex; flex-wrap: wrap; gap: 8px; margin-block-end: 18px; }
+.advice-categories button { padding: 9px 14px; border: 1px solid #b5836d; border-radius: 4px; background: #f8eee2; color: #843d32; font: inherit; cursor: pointer; }
+.advice-categories button[aria-pressed=true] { background: var(--accent); color: #fff8ec; }
+.template-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; }
+.template-card { border: 1px solid var(--line); border-radius: 4px; padding: 16px; min-inline-size: 0; background: #faf5ed; }
+.template-card h3 { margin: 0 0 10px; font: 19px var(--font-book); color: #843d32; }
+.template-card p { font-size: 14px; line-height: 1.8; }
+.template-card details { font-size: 13px; margin-block: 12px; }
+.template-card summary { cursor: pointer; color: #8c513f; }
+.template-card a,.reference-details a { color: var(--accent); overflow-wrap: anywhere; }
+.reference-details { margin-block: 12px; font-size: 13px; color: var(--muted); }
+.reference-details summary { color: #843d32; cursor: pointer; }
+.reference-details p { line-height: 1.8; }
+.reference-note { font-size: 12px; color: var(--muted); line-height: 1.7; }
+.edit-item textarea[readonly] { background: #f6f0e7; color: #665549; }
+.advice-category-label { display: block; margin-block: 8px; color: #843d32; font-size: 13px; }
+.reference-missing { color: #9b3e31; font-size: 12px; }
+@media(max-width:700px) {
+  .case-toolbar { align-items: stretch; }
+  .case-toolbar label { inline-size: 100%; }
+  .case-toolbar input { flex: 1; max-inline-size: none; min-inline-size: 0; font-size: 16px; }
+  #case-save-status { inline-size: 100%; margin-inline-start: 0; }
+  .case-library-body,.template-grid { grid-template-columns: minmax(0,1fr); }
+  #case-list { border-inline-end: 0; border-block-end: 1px solid var(--line); }
+  .case-toolbar button,.library-header button,.advice-categories button,.reference-choose { min-block-size: 48px; }
+}

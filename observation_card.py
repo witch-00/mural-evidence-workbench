@@ -4,6 +4,7 @@ from datetime import datetime, timezone, timedelta
 from html import escape
 from io import BytesIO
 from pathlib import Path
+from recommendation_sources import CATEGORIES
 
 from PIL import Image, ImageDraw
 from reportlab.lib import colors
@@ -248,10 +249,14 @@ def _flows(doc, size, image_height, compact=False):
         observations = _table(['区域', '观察与分歧', '依据与复核'], rows, [39, 231, WIDTH - 270], size, compact)
     flows += [observations, gap(12),
               _heading('03', '建议行动与风险边界'), gap(6)]
-    rows = [[_paragraph(_text(row['target']), size, bold=True, color=RUST),
-             _entries([(row['origin'], row['action'])], size),
-             _paragraph(_text(row['basis']), size), _paragraph(_text(row['risk']), size)] for row in doc['advice']]
-    flows += [_table(['目标', '建议行动', '图像依据', '风险与限制'], rows, [48, 171, 154, WIDTH - 373], size, compact),
+    rows = []
+    for row in doc['advice']:
+        citations = '<br/>'.join('[' + _text(s['id']) + '] ' + _text(s['locator']) for s in row.get('source_citations', []))
+        basis = _text(row['basis']) + ('<br/><font size="8" color="#73503d">' + citations + '</font>' if citations else '')
+        category = CATEGORIES.get(row.get('category'), row['origin'])
+        rows.append([_paragraph(_text(row['target']), size, bold=True, color=RUST),
+                     _entries([(category, row['action'])], size), _paragraph(basis, size), _paragraph(_text(row['risk']), size)])
+    flows += [_table(['目标', '建议行动', '本图依据与文献', '风险与限制'], rows, [48, 171, 154, WIDTH - 373], size, compact),
               gap(10), _entries([('判断边界', doc['uncertainty'])], size), gap(12),
               _heading('04', '素材来源与 AI 参与'), gap(6)]
     counts = Counter(row['origin'] for row in doc['regions'])
@@ -261,6 +266,16 @@ def _flows(doc, size, image_height, compact=False):
                 ('工具与记录', '壁画智护工作台 · Pillow · ReportLab' +
                  ('；' + doc['other_tools'] if doc['other_tools'] else ''))]
     rows = [[_paragraph(_text(key), 8, bold=True, color=GREEN), _paragraph(_text(value), 8, 11)] for key, value in metadata]
+    cited = doc.get('professional_sources', [])
+    if cited:
+        entries = []
+        for source in cited:
+            title = source['short_title']
+            url = escape(source.get('full_text_url') or source['url'], quote=True)
+            entries.append('[' + _text(source['id']) + '] ' + _text(title) + '（' + _text(source['year']) + '），'
+                           + _text(source['publisher']) + '；' + _text(source['locator'])
+                           + f' <link href="{url}" color="#974e36">全文</link>')
+        rows.insert(2, [_paragraph('专业文献', 8, bold=True, color=GREEN), _paragraph('<br/>'.join(entries), 8, 11)])
     table = Table(rows, colWidths=[66, WIDTH - 66])
     table.setStyle(TableStyle([('VALIGN', (0, 0), (-1, -1), 'TOP'),
                                ('LEFTPADDING', (0, 0), (-1, -1), 5),
