@@ -52,7 +52,7 @@ window.adviceSources = (() => {
     const t=item(row.template_id);
     if(t){
       const tag=document.createElement('span');tag.className='advice-category-label';tag.textContent=labels[t.category]+' · '+t.label;card.append(tag);
-      const note=document.createElement('p');note.className='reference-note';note.textContent='行动与风险按文献模板保留。请选择适用区域，并填写本图的具体依据。';card.append(note);
+      const note=document.createElement('p');note.className='reference-note';note.textContent='行动与风险按文献模板保留。请确认建议适用范围，并填写本图的具体依据。';card.append(note);
       const details=document.createElement('details'),summary=document.createElement('summary');
       details.className='reference-details';summary.textContent='查看专业文献依据';details.append(summary);
       const principle=document.createElement('p');principle.textContent='文献原则：'+t.basis;details.append(principle);

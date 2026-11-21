@@ -25,6 +25,7 @@ function syncComparisonView(before,after,caption) {
   comparisonSources={before,after,caption};
   updateCompareButtons();
   $('comparison-caption').textContent=caption;
+  $('inline-comparison-caption').textContent=caption;
   if($('comparison-view').open) updateFullscreenImages();
 }
 async function updateFullscreenImages() {

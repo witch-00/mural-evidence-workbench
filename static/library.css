@@ -43,6 +43,16 @@
 .edit-item textarea[readonly] { background: #f6f0e7; color: #665549; }
 .advice-category-label { display: block; margin-block: 8px; color: #843d32; font-size: 13px; }
 .reference-missing { color: #9b3e31; font-size: 12px; }
+.advice-scope { min-inline-size: 0; margin: 12px 0 14px; padding: 0; border: 0; }
+.advice-scope legend { padding: 0; color: #66503c; font-size: 14px; font-weight: 600; }
+.scope-help,.scope-error { margin: 5px 0 9px; font-size: 12px; line-height: 1.7; }
+.scope-help { color: #716551; }
+.scope-error { color: #963b37; }
+.scope-choices { display: flex; flex-wrap: wrap; gap: 8px; }
+.scope-choices label { display: flex; align-items: center; gap: 7px; min-block-size: 48px; margin: 0; padding: 8px 12px; border: 1px solid #bca88e; border-radius: 4px; color: #665640; cursor: pointer; }
+.scope-choices input[type=radio] { appearance: auto; inline-size: 16px; block-size: 16px; min-block-size: 0; padding: 0; margin: 0; accent-color: var(--accent); }
+.scope-choices label:has(:checked) { background: #f1dfcd; border-color: #a76a50; color: #84392e; }
+.scope-choices label:has(:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
 @media(max-width:700px) {
   .case-toolbar { align-items: stretch; }
   .case-toolbar label { inline-size: 100%; }

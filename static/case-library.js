@@ -82,7 +82,6 @@ window.caseLibrary = (() => {
       if(!await beforeReplace())return;
       if(dialog.open)dialog.close();
       await loadImage(file);
-      $('source-drawer').open=true;
       $('source-drawer').scrollIntoView({block:'start'});
     };
   }

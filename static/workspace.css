@@ -36,10 +36,10 @@ nav a.nav-active,nav a:hover { color: var(--accent); background: none; border-bl
 .intro h1 { font: 500 clamp(24px,2.4vw,32px)/1.5 "Noto Serif CJK SC","Songti SC",serif; letter-spacing: 1px; margin: 0; }
 .intro p { color: var(--muted); margin: 6px 0 0; font-size: 13px; }
 .sidebar-footer { margin: 0; padding: 0; max-inline-size: 320px; font-size: 11px; color: #6a7169; }
-.source-drawer { background: #faf7f1; border: 1px solid var(--line); border-radius: 6px; }
-.source-drawer > summary { cursor: pointer; padding: 14px 20px; font-weight: 650; color: #514c42; }
-.source-drawer > summary span { margin-inline-start: 18px; color: var(--muted); font-size: 12px; font-weight: 400; }
-.source-drawer > .section-title { display: none; }
+.source-panel { background: #faf7f1; border: 1px solid var(--line); border-radius: 6px; scroll-margin-top: 96px; }
+.source-header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 18px; padding: 14px 20px; }
+.source-header h2 { margin: 0; font-size: 17px; font-weight: 650; color: #514c42; }
+.source-header p { margin: 0; color: var(--muted); font-size: 12px; }
 .setup-grid { padding: 0 18px 18px; grid-template-columns: .9fr 1.1fr; gap: 20px; }
 .panel { border: 1px solid var(--line); box-shadow: none; border-radius: 6px; background: var(--surface); }
 .upload-panel,.info-panel { padding: 18px 20px; }
@@ -94,9 +94,16 @@ input:focus,textarea:focus,select:focus { border-color: #a66754!important; box-s
 .result-heading { align-items: center; }
 .result-heading h3 span { color: #797568; }
 .small-help { color: #81786a; font-size: 11px; margin-block: 8px; }
-#region-picker { display: flex; gap: 8px; margin-block: 12px; }
-#region-picker button { border: 1px solid #d8cbb8; border-radius: 3px; background: #faf5eb; padding: 6px 18px; color: #73644e; }
-#region-picker button[aria-pressed=true] { background: #923b37; border-color: #923b37; color: white; box-shadow: inset 0 -3px #d6ad7e; }
+#region-picker,#repair-region-picker { display: flex; flex-wrap: wrap; gap: 8px; }
+#region-picker { margin-block: 12px; }
+#region-picker button,#repair-region-picker button { border: 1px solid #bca88e; border-radius: 3px; background: #faf5eb; min-block-size: 48px; padding: 6px 18px; color: #665640; }
+#region-picker button[aria-pressed=true],#repair-region-picker button[aria-pressed=true] { background: #923b37; border-color: #923b37; color: white; box-shadow: inset 0 -3px #d6ad7e; }
+.repair-region-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin-block-end: 14px; padding: 12px 18px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
+#repair-region-label { font-weight: 600; color: #665640; }
+#repair-region-help { margin: 0; color: #716551; font-size: 12px; }
+.inline-comparison-caption { margin: 0 0 8px; color: #716551; font-size: 12px; }
+.inline-comparison-caption:empty { display: none; }
+#region-picker button:focus-visible,#repair-region-picker button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 .editable-list { display: block; }
 .edit-item { background: none; border: 0; border-radius: 0; padding: 0; }
 .edit-top { color: #574b3c; font-size: 12px; }
@@ -192,8 +199,8 @@ dialog::backdrop { background: #1c211bc4; backdrop-filter: blur(4px); overflow: 
   .intro h1 { font-size: 23px; }
   .intro p { font-size: 12px; }
   .sidebar-footer { margin-block-start: 10px; font-size: 10px; }
-  .source-drawer > summary { padding: 12px 14px; }
-  .source-drawer > summary span { display: block; margin: 2px 0 0 18px; font-size: 10px; }
+  .source-header { padding: 12px 14px; }
+  .source-header p { flex-basis: 100%; font-size: 12px; }
   .setup-grid,.deliver-grid,.repair-card,.repair-notes { grid-template-columns: minmax(0,1fr); }
   .setup-grid { gap: 12px; padding: 0 10px 10px; }
   .project-actions { gap: 8px; }

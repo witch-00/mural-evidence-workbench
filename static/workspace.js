@@ -2,22 +2,31 @@ let activeRegion = null;
 let activeInspector = 'regions';
 let detailPanzoom = null;
 
-function updateInspector() {
-  if(!state.regions.some(row => row.id === activeRegion)) activeRegion = state.regions[0]?.id;
-  const picker = $('region-picker');
-  picker.replaceChildren();
-  for(const row of state.regions) {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.textContent = row.id;
-    button.setAttribute('aria-pressed', String(row.id === activeRegion));
-    button.onclick = () => {
-      activeRegion = row.id;
-      updateInspector();
-      document.querySelector('.inspector-scroll').scrollTop = 0;
-    };
-    picker.append(button);
+function syncRegionPicker(picker, repair=false) {
+  const ids=state.regions.map(row=>row.id);
+  if(picker.children.length!==ids.length || [...picker.children].some((button,i)=>button.dataset.region!==ids[i])) {
+    picker.replaceChildren(...ids.map(id=>{
+      const button=document.createElement('button');button.type='button';button.dataset.region=id;button.textContent=id;
+      button.onclick=()=>{
+        activeRegion=id;
+        if(repair)state.compareWhole=false;
+        updateInspector();
+        document.querySelector('.inspector-scroll').scrollTop=0;
+        if(state.restored)showComparison().catch(error=>notify(error.message,true));
+      };
+      return button;
+    }));
   }
+  for(const button of picker.children)button.setAttribute('aria-pressed',String(button.dataset.region===activeRegion));
+}
+
+function updateInspector() {
+  const previous=activeRegion;
+  if(!state.regions.some(row => row.id === activeRegion)) activeRegion = state.regions[0]?.id || null;
+  syncRegionPicker($('region-picker'));
+  syncRegionPicker($('repair-region-picker'),true);
+  $('repair-region-help').textContent=state.regions.length ? '切换对照局部；修复范围以原图涂抹为准。' : '框选关注区域后，可在此切换局部。';
+  if(previous!==activeRegion && state.restored)showComparison().catch(error=>notify(error.message,true));
   for(const card of $('regions').children) {
     card.hidden = !!card.dataset.region && card.dataset.region !== activeRegion;
   }
@@ -81,7 +90,6 @@ function revealPendingReview(row) {
   const issue=evidenceIssue(row);
   let field;
   if(issue.field==='references') {
-    $('source-drawer').open=true;
     field=$('references');
   } else if(issue.field==='decision') {
     field=card.querySelector('.review-choices button');
@@ -94,5 +102,13 @@ function revealPendingReview(row) {
   field.setAttribute('aria-invalid','true');
   field.scrollIntoView({block:'center'});field.focus();notify(row.id+'：'+issue.message,true);
 }
-$('source-drawer').addEventListener('toggle',layoutCanvas);
+function revealAdviceScope(row) {
+  activeInspector='advice';updateInspector();
+  const index=state.recommendations.indexOf(row),scope=$('recommendations').children[index].querySelector('.advice-scope');
+  const error=scope.querySelector('.scope-error');
+  error.textContent='请选择适用范围：整幅画面，或这条建议所针对的局部编号。';error.hidden=false;
+  for(const input of scope.querySelectorAll('input'))input.setAttribute('aria-invalid','true');
+  scope.scrollIntoView({block:'center'});scope.querySelector('input').focus({preventScroll:true});
+  notify('建议 '+(index+1)+'：请在“建议适用范围”中点选整幅画面或局部编号。',true);
+}
 updateInspector();
