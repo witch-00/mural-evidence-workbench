@@ -73,6 +73,19 @@ window.caseLibrary = (() => {
     $('case-save-copy').hidden=true;
     try{await flush();notify('已另存为新档案。');}catch(error){notify(error.message,true);}
   }
+  function bindNewCase(buttonId,inputId){
+    const input=$(inputId);
+    $(buttonId).onclick=()=>input.click();
+    input.onchange=async()=>{
+      const file=input.files[0];input.value='';
+      if(!file)return;
+      if(!await beforeReplace())return;
+      if(dialog.open)dialog.close();
+      await loadImage(file);
+      $('source-drawer').open=true;
+      $('source-drawer').scrollIntoView({block:'start'});
+    };
+  }
   function button(text,run){const b=document.createElement('button');b.type='button';b.textContent=text;b.onclick=run;return b;}
   function time(value){return new Date(value).toLocaleString('zh-CN',{hour12:false});}
   async function openCase(caseId,number){
@@ -129,6 +142,8 @@ window.caseLibrary = (() => {
     changed();try{await flush();notify('已保存到本机档案。');}catch(error){notify(error.message,true);}
   };
   $('case-save-copy').onclick=saveCopy;
+  bindNewCase('new-case','new-case-image');
+  bindNewCase('new-case-in-library','new-case-image-library');
   title.addEventListener('input',changed);
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden' && dirty && !blocked)flush().catch(()=>{});});
   request('/api/cases').then(()=>{
