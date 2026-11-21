@@ -285,7 +285,7 @@ index 390acb6..fbbff7f 100644
 +<script src="/static/advice-sources.js"></script>
  </body></html>
 diff --git a/static/app.js b/static/app.js
-index 809568f..3f14698 100644
+index 809568f..0a79ca3 100644
 --- a/static/app.js
 +++ b/static/app.js
 @@ -26,4 +26,4 @@ function notify(message,error=false){
@@ -639,7 +639,8 @@ index 809568f..3f14698 100644
 +});
 +async function restoreProject(file) {
    if(state.dirty && !confirm('当前工作尚未保存，恢复进度会覆盖现有内容。是否继续？'))return;
-   if(file.size>330000000)return notify('工作文件过大。',true);
+-  if(file.size>330000000)return notify('工作文件过大。',true);
++  if(file.size>480*1024*1024)return notify('工作文件过大。',true);
 +  if(window.caseLibrary && !await caseLibrary.beforeReplace())return;
    const ticket=++state.loadTicket;
 @@ -1282,3 +1349,3 @@ $('load-project').addEventListener('change',async e=>{
@@ -647,6 +648,11 @@ index 809568f..3f14698 100644
 -    if(![1,2].includes(p.version) || !Array.isArray(p.regions) || p.regions.length>3 ||
 +    if(![1,2,3].includes(p.version) || !Array.isArray(p.regions) || p.regions.length>3 ||
         !Array.isArray(p.recommendations) || p.recommendations.length>2)throw new Error('工作文件格式无效。');
+@@ -1287,3 +1354,3 @@ $('load-project').addEventListener('change',async e=>{
+     if(ticket!==state.loadTicket)return;
+-    if(im.width*im.height>20000000 || !im.width || !im.height ||
++    if(im.width*im.height>80000000 || !im.width || !im.height ||
+        [maskImage,restoredImage].some(x=>x && (x.width!==im.width || x.height!==im.height)) ||
 @@ -1316,2 +1383,3 @@ $('load-project').addEventListener('change',async e=>{
      $('reviewed').checked=false;$('file-name').textContent='已恢复工作进度';
 +    $('source-drawer').open=false;
